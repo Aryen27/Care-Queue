@@ -31,6 +31,8 @@
     <Folder Include="CQ.API\Events\" />
     <Folder Include="CQ.API\Configurations\" />
     <Folder Include="CQ.API\Middlewares\" />
+    <Folder Include="CQ.API\Models\DTOs\" />
+    <Folder Include="CQ.API\Models\ViewModels\" />
     <Folder Include="CQ.API\Repositories\" />
     <Folder Include="CQ.API\Services\" />
     <Folder Include="CQ.Blazor\Components\" />
