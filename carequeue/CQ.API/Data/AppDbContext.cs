@@ -21,10 +21,13 @@ namespace carequeue.CQ.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Enable PostgreSQL extension for case-insensitive column queries
+            modelBuilder.HasPostgresExtension("citext");
+
             // 1. Hospital Defaults
             modelBuilder.Entity<Hospital>(entity =>
             {
-                entity.Property(h => h.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(h => h.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.Property(h => h.IsActive).HasDefaultValue(true);
                 entity.Property(h => h.HospitalName).HasMaxLength(150);
             });
@@ -32,14 +35,19 @@ namespace carequeue.CQ.API.Data
             // 2. User Defaults & Unique constraints
             modelBuilder.Entity<User>(entity =>
             {
+                entity.Property(u => u.Email)
+                    .HasColumnType("citext") // Enforces unique checks like admin@care.com == Admin@care.com
+                    .HasMaxLength(255)
+                    .IsRequired();
+
                 entity.HasIndex(u => u.Email).IsUnique();
-                entity.Property(u => u.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+                entity.Property(u => u.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.Property(u => u.IsActive).HasDefaultValue(true);
                 entity.Property(u => u.IsEmailVerified).HasDefaultValue(false);
                 entity.HasOne(u => u.Hospital).WithMany().HasForeignKey(u => u.HospitalId).OnDelete(DeleteBehavior.Restrict);
                 entity.Property(u => u.Role).HasConversion<string>().HasMaxLength(30).IsRequired();
                 entity.Property(u => u.Name).HasMaxLength(100).IsRequired();
-                entity.Property(u => u.Email).HasMaxLength(255).IsRequired();
             });
 
             // 3. Doctor Configurations
@@ -56,7 +64,7 @@ namespace carequeue.CQ.API.Data
             // 4. Patient Configurations
             modelBuilder.Entity<Patient>(entity =>
             {
-                entity.Property(p => p.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(p => p.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.HasOne(p => p.Hospital).WithMany().HasForeignKey(p => p.HospitalId).OnDelete(DeleteBehavior.Restrict);
                 entity.Property(p => p.Name).HasMaxLength(100);
                 entity.Property(p => p.Email).HasMaxLength(255);
@@ -66,7 +74,7 @@ namespace carequeue.CQ.API.Data
             // 5. Appointment Constraints & Enums
             modelBuilder.Entity<Appointment>(entity =>
             {
-                entity.Property(a => a.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(a => a.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.HasOne(a => a.Hospital).WithMany().HasForeignKey(a => a.HospitalId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(a => a.Patient).WithMany().HasForeignKey(a => a.PatientId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(a => a.Doctor).WithMany().HasForeignKey(a => a.DoctorId).OnDelete(DeleteBehavior.Restrict);
@@ -80,7 +88,6 @@ namespace carequeue.CQ.API.Data
                     a.AppointmentTime
                 }).IsUnique();
 
-                // Maps your Appointment Status Enum as a string (e.g., "Scheduled", "Completed")
                 entity.Property(a => a.Status)
                     .HasConversion<string>()
                     .HasMaxLength(30)
@@ -90,13 +97,11 @@ namespace carequeue.CQ.API.Data
             // 6. Notification Channels & Status Enums
             modelBuilder.Entity<Notification>(entity =>
             {
-                // Converts Channel Enum to String (e.g., "Email", "SMS", "WhatsApp")
                 entity.Property(n => n.Channel)
                     .HasConversion<string>()
                     .HasMaxLength(20)
                     .IsRequired();
 
-                // Converts Notification Status Enum to String (e.g., "Pending", "Sent")
                 entity.Property(n => n.Status)
                     .HasConversion<string>()
                     .HasMaxLength(20)
@@ -111,9 +116,8 @@ namespace carequeue.CQ.API.Data
             // 7. OTP Verifications & Purpose Enums
             modelBuilder.Entity<OtpVerification>(entity =>
             {
-                entity.Property(o => o.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(o => o.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
 
-                // Converts Otp Purpose Enum to String (e.g., "EmailVerification", "PasswordReset")
                 entity.Property(o => o.Purpose)
                     .HasConversion<string>()
                     .HasMaxLength(50)
@@ -125,14 +129,13 @@ namespace carequeue.CQ.API.Data
             // 8. Email Logging Configuration
             modelBuilder.Entity<EmailLog>(entity =>
             {
-                entity.Property(el => el.SentAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(el => el.SentAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.HasOne(el => el.Notification).WithMany().HasForeignKey(el => el.NotificationId).OnDelete(DeleteBehavior.Cascade);
             });
 
             // 9. Notification Templates & Type Enums
             modelBuilder.Entity<NotificationTemplate>(entity =>
             {
-                // Converts TemplateType Enum to String
                 entity.Property(nt => nt.Type)
                     .HasConversion<string>()
                     .HasMaxLength(50)

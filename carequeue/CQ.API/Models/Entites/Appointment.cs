@@ -24,7 +24,7 @@ namespace carequeue.CQ.API.Models.Entites
         public Patient Patient { get; set; } = null!;
 
         [Required]
-        public int DoctorId { get; set; }
+        public Guid DoctorId { get; set; }
 
         [ForeignKey(nameof(DoctorId))]
         public Doctor Doctor { get; set; } = null!;
