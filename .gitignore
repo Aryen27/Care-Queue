@@ -13,5 +13,5 @@ obj/
 *.log
 
 # ASP.NET
-appsettings.Development.json
-appsettings.json
+carequeue/appsettings.Development.json
+carequeue/appsettings.json
