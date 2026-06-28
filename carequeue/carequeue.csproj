@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>f462aa8b-daa4-49d9-8ceb-ef7c202c548e</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.28" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.28">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.28">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageReference Include="Supabase.Storage" Version="2.4.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="CQ.API\Controllers\admins\" />
+    <Folder Include="CQ.API\Controllers\patients\" />
+    <Folder Include="CQ.API\Helpers\" />
+    <Folder Include="CQ.API\Events\" />
+    <Folder Include="CQ.API\Configurations\" />
+    <Folder Include="CQ.API\Middlewares\" />
+    <Folder Include="CQ.API\Repositories\" />
+    <Folder Include="CQ.API\Services\" />
+    <Folder Include="CQ.Blazor\Components\" />
+    <Folder Include="CQ.Blazor\Pages\" />
+    <Folder Include="CQ.Database\" />
+  </ItemGroup>
+
+</Project>
