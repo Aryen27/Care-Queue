@@ -2,13 +2,11 @@
 {
     public class PatientListDto
     {
-        public int PatientId { get; set; }
+        public Guid PatientId { get; set; }
 
         public string Name { get; set; } = string.Empty;
 
         public string Phone { get; set; } = string.Empty;
-
-        public string PhoneExtension { get; set; } = string.Empty;
 
         public string Gender { get; set; } = string.Empty;
 

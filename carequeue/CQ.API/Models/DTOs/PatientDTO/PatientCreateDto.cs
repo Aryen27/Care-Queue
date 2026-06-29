@@ -8,21 +8,20 @@ namespace carequeue.CQ.API.DTOs.PatientDTO
         public int HospitalId { get; set; }
 
         [Required]
-        [StringLength(150)]
+        public int CustomerId { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; } = string.Empty;
+
+        [EmailAddress]
+        [StringLength(255)]
+        public string? Email { get; set; }
 
         [Required]
         [Phone]
-        [StringLength(10)]
+        [StringLength(15)]
         public string Phone { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(10)]
-        public string PhoneExtension { get; set; } = string.Empty;
-
-        [EmailAddress]
-        [StringLength(150)]
-        public string? Email { get; set; }
 
         [Required]
         public DateTime DOB { get; set; }
@@ -30,8 +29,5 @@ namespace carequeue.CQ.API.DTOs.PatientDTO
         [Required]
         [StringLength(20)]
         public string Gender { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string? Address { get; set; }
     }
 }

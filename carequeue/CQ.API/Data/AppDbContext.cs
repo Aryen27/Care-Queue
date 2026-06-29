@@ -9,6 +9,7 @@ namespace carequeue.CQ.API.Data
 
         public DbSet<Hospital> Hospitals { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Customer> Customers { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
@@ -32,11 +33,11 @@ namespace carequeue.CQ.API.Data
                 entity.Property(h => h.HospitalName).HasMaxLength(150);
             });
 
-            // 2. User Defaults & Unique constraints
+            // 2. User Defaults & Unique constraints (Hospital Side)
             modelBuilder.Entity<User>(entity =>
             {
                 entity.Property(u => u.Email)
-                    .HasColumnType("citext") // Enforces unique checks like admin@care.com == Admin@care.com
+                    .HasColumnType("citext")
                     .HasMaxLength(255)
                     .IsRequired();
 
@@ -50,7 +51,23 @@ namespace carequeue.CQ.API.Data
                 entity.Property(u => u.Name).HasMaxLength(100).IsRequired();
             });
 
-            // 3. Doctor Configurations
+            // 3. Customer Configuration (Consumer Account Side)
+            modelBuilder.Entity<Customer>(entity =>
+            {
+                entity.ToTable("Customers");
+
+                entity.Property(c => c.Email)
+                    .HasColumnType("citext")
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                entity.HasIndex(c => c.Email).IsUnique();
+
+                entity.Property(c => c.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
+                entity.Property(c => c.IsActive).HasDefaultValue(true);
+            });
+
+            // 4. Doctor Configurations
             modelBuilder.Entity<Doctor>(entity =>
             {
                 entity.Property(d => d.IsAvailable).HasDefaultValue(true);
@@ -61,17 +78,28 @@ namespace carequeue.CQ.API.Data
                 entity.Property(d => d.Specialization).HasMaxLength(100);
             });
 
-            // 4. Patient Configurations
+            // 5. Patient Configurations
             modelBuilder.Entity<Patient>(entity =>
             {
                 entity.Property(p => p.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
-                entity.HasOne(p => p.Hospital).WithMany().HasForeignKey(p => p.HospitalId).OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.Hospital)
+                    .WithMany()
+                    .HasForeignKey(p => p.HospitalId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                //(One Customer owns Multiple Patient profiles)
+                entity.HasOne(p => p.Customer)
+                    .WithMany(c => c.Patients)
+                    .HasForeignKey(p => p.CustomerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
                 entity.Property(p => p.Name).HasMaxLength(100);
                 entity.Property(p => p.Email).HasMaxLength(255);
                 entity.Property(p => p.Phone).HasMaxLength(10);
             });
 
-            // 5. Appointment Constraints & Enums
+            // 6. Appointment Constraints & Enums
             modelBuilder.Entity<Appointment>(entity =>
             {
                 entity.Property(a => a.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
@@ -94,18 +122,11 @@ namespace carequeue.CQ.API.Data
                     .IsRequired();
             });
 
-            // 6. Notification Channels & Status Enums
+            // 7. Notification Channels & Status Enums
             modelBuilder.Entity<Notification>(entity =>
             {
-                entity.Property(n => n.Channel)
-                    .HasConversion<string>()
-                    .HasMaxLength(20)
-                    .IsRequired();
-
-                entity.Property(n => n.Status)
-                    .HasConversion<string>()
-                    .HasMaxLength(20)
-                    .IsRequired();
+                entity.Property(n => n.Channel).HasConversion<string>().HasMaxLength(20).IsRequired();
+                entity.Property(n => n.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
 
                 entity.HasOne(n => n.Hospital).WithMany().HasForeignKey(n => n.HospitalId).OnDelete(DeleteBehavior.Restrict);
                 entity.HasOne(n => n.User).WithMany().HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Restrict);
@@ -113,34 +134,25 @@ namespace carequeue.CQ.API.Data
                 entity.HasOne(n => n.Appointment).WithMany().HasForeignKey(n => n.AppointmentId).OnDelete(DeleteBehavior.SetNull);
             });
 
-            // 7. OTP Verifications & Purpose Enums
+            // 8. OTP Verifications & Purpose Enums
             modelBuilder.Entity<OtpVerification>(entity =>
             {
                 entity.Property(o => o.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
-
-                entity.Property(o => o.Purpose)
-                    .HasConversion<string>()
-                    .HasMaxLength(50)
-                    .IsRequired();
-
+                entity.Property(o => o.Purpose).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.HasOne(o => o.User).WithMany().HasForeignKey(o => o.UserId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // 8. Email Logging Configuration
+            // 9. Email Logging Configuration
             modelBuilder.Entity<EmailLog>(entity =>
             {
                 entity.Property(el => el.SentAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.HasOne(el => el.Notification).WithMany().HasForeignKey(el => el.NotificationId).OnDelete(DeleteBehavior.Cascade);
             });
 
-            // 9. Notification Templates & Type Enums
+            // 10. Notification Templates & Type Enums
             modelBuilder.Entity<NotificationTemplate>(entity =>
             {
-                entity.Property(nt => nt.Type)
-                    .HasConversion<string>()
-                    .HasMaxLength(50)
-                    .IsRequired();
-
+                entity.Property(nt => nt.Type).HasConversion<string>().HasMaxLength(50).IsRequired();
                 entity.Property(nt => nt.IsActive).HasDefaultValue(true);
                 entity.Property(nt => nt.Name).HasMaxLength(100).IsRequired();
                 entity.Property(nt => nt.Subject).HasMaxLength(200).IsRequired();

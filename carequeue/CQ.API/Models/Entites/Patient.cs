@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace carequeue.CQ.API.Models.Entites
@@ -8,7 +9,7 @@ namespace carequeue.CQ.API.Models.Entites
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int PatientId { get; set; }
+        public Guid PatientId { get; set; }
 
         [Required]
         public int HospitalId { get; set; }
@@ -16,22 +17,23 @@ namespace carequeue.CQ.API.Models.Entites
         [ForeignKey(nameof(HospitalId))]
         public Hospital Hospital { get; set; } = null!;
 
+        // Foreign Key to Customer account
         [Required]
-        [StringLength(150)]
+        public int CustomerId { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public Customer Customer { get; set; } = null!;
+
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(10)]
-        [Phone]
-        public string Phone { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(10)]
-        public string PhoneExtension { get; set; } = string.Empty;
-
-        [StringLength(150)]
-        [EmailAddress]
+        [StringLength(255)]
         public string? Email { get; set; }
+
+        [Required]
+        [StringLength(15)]
+        public string Phone { get; set; } = string.Empty;
 
         [Required]
         [Column(TypeName = "date")]
@@ -40,9 +42,6 @@ namespace carequeue.CQ.API.Models.Entites
         [Required]
         [StringLength(20)]
         public string Gender { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string? Address { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }
