@@ -44,5 +44,7 @@ namespace carequeue.CQ.API.Models.Entites
         public string Gender { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

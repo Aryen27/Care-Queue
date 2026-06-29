@@ -32,7 +32,6 @@
     <Folder Include="CQ.API\Configurations\" />
     <Folder Include="CQ.API\Middlewares\" />
     <Folder Include="CQ.API\Models\ViewModels\" />
-    <Folder Include="CQ.API\Repositories\Interfaces\" />
     <Folder Include="CQ.API\Services\" />
     <Folder Include="CQ.Blazor\Components\" />
     <Folder Include="CQ.Blazor\Pages\" />

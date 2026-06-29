@@ -12,10 +12,10 @@ namespace carequeue.CQ.API.Models.Entites
         public int OtpId { get; set; }
 
         [Required]
-        public int UserId { get; set; }
+        public int? CustomerId { get; set; }
 
-        [ForeignKey(nameof(UserId))]
-        public User User { get; set; } = null!;
+        [ForeignKey(nameof(CustomerId))]
+        public Customer? Customer { get; set; } = null!;
 
         [Required]
         [StringLength(256)]
