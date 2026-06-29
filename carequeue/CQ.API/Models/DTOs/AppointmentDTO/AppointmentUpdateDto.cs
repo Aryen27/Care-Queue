@@ -9,7 +9,7 @@ namespace carequeue.CQ.API.DTOs.AppointmentDTO
         public int HospitalId { get; set; }
 
         [Required]
-        public int PatientId { get; set; }
+        public Guid PatientId { get; set; }
 
         [Required]
         public Guid DoctorId { get; set; }

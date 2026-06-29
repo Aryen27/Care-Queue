@@ -51,8 +51,8 @@ namespace carequeue.Migrations
                     b.Property<int>("HospitalId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -74,6 +74,52 @@ namespace carequeue.Migrations
                         .IsUnique();
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("carequeue.CQ.API.Models.Entites.Customer", b =>
+                {
+                    b.Property<int>("CustomerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("citext");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.HasKey("CustomerId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("carequeue.CQ.API.Models.Entites.Doctor", b =>
@@ -234,6 +280,14 @@ namespace carequeue.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FailureReason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -245,8 +299,8 @@ namespace carequeue.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Recipient")
                         .IsRequired()
@@ -264,21 +318,27 @@ namespace carequeue.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Subject")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
                     b.Property<int>("TemplateId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("NotificationId");
 
                     b.HasIndex("AppointmentId");
 
+                    b.HasIndex("CustomerId");
+
                     b.HasIndex("HospitalId");
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("TemplateId");
 
                     b.ToTable("Notifications");
                 });
@@ -364,20 +424,17 @@ namespace carequeue.Migrations
 
             modelBuilder.Entity("carequeue.CQ.API.Models.Entites.Patient", b =>
                 {
-                    b.Property<int>("PatientId")
+                    b.Property<Guid>("PatientId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PatientId"));
-
-                    b.Property<string>("Address")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("DOB")
                         .HasColumnType("date");
@@ -404,12 +461,9 @@ namespace carequeue.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<string>("PhoneExtension")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
                     b.HasKey("PatientId");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("HospitalId");
 
@@ -539,6 +593,12 @@ namespace carequeue.Migrations
                         .HasForeignKey("AppointmentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("carequeue.CQ.API.Models.Entites.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("carequeue.CQ.API.Models.Entites.Hospital", "Hospital")
                         .WithMany()
                         .HasForeignKey("HospitalId")
@@ -551,19 +611,21 @@ namespace carequeue.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("carequeue.CQ.API.Models.Entites.User", "User")
+                    b.HasOne("carequeue.CQ.API.Models.Entites.NotificationTemplate", "Template")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Appointment");
 
+                    b.Navigation("Customer");
+
                     b.Navigation("Hospital");
 
                     b.Navigation("Patient");
 
-                    b.Navigation("User");
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("carequeue.CQ.API.Models.Entites.OtpVerification", b =>
@@ -579,11 +641,19 @@ namespace carequeue.Migrations
 
             modelBuilder.Entity("carequeue.CQ.API.Models.Entites.Patient", b =>
                 {
+                    b.HasOne("carequeue.CQ.API.Models.Entites.Customer", "Customer")
+                        .WithMany("Patients")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("carequeue.CQ.API.Models.Entites.Hospital", "Hospital")
                         .WithMany()
                         .HasForeignKey("HospitalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Customer");
 
                     b.Navigation("Hospital");
                 });
@@ -597,6 +667,11 @@ namespace carequeue.Migrations
                         .IsRequired();
 
                     b.Navigation("Hospital");
+                });
+
+            modelBuilder.Entity("carequeue.CQ.API.Models.Entites.Customer", b =>
+                {
+                    b.Navigation("Patients");
                 });
 #pragma warning restore 612, 618
         }

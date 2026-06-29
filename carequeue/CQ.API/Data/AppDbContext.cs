@@ -65,6 +65,7 @@ namespace carequeue.CQ.API.Data
 
                 entity.Property(c => c.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
                 entity.Property(c => c.IsActive).HasDefaultValue(true);
+
             });
 
             // 4. Doctor Configurations
@@ -122,16 +123,53 @@ namespace carequeue.CQ.API.Data
                     .IsRequired();
             });
 
-            // 7. Notification Channels & Status Enums
+            // 7. Notification Configuration
             modelBuilder.Entity<Notification>(entity =>
             {
-                entity.Property(n => n.Channel).HasConversion<string>().HasMaxLength(20).IsRequired();
-                entity.Property(n => n.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+                entity.Property(n => n.Channel)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
 
-                entity.HasOne(n => n.Hospital).WithMany().HasForeignKey(n => n.HospitalId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(n => n.User).WithMany().HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(n => n.Patient).WithMany().HasForeignKey(n => n.PatientId).OnDelete(DeleteBehavior.Restrict);
-                entity.HasOne(n => n.Appointment).WithMany().HasForeignKey(n => n.AppointmentId).OnDelete(DeleteBehavior.SetNull);
+                entity.Property(n => n.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(20)
+                    .IsRequired();
+
+                entity.Property(n => n.Recipient)
+                    .HasMaxLength(250)
+                    .IsRequired();
+
+                entity.Property(n => n.Subject)
+                    .HasMaxLength(250);
+
+                entity.Property(n => n.CreatedAt)
+                    .HasDefaultValueSql("timezone('utc', now())");
+
+                entity.HasOne(n => n.Hospital)
+                    .WithMany()
+                    .HasForeignKey(n => n.HospitalId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.Customer)
+                    .WithMany()
+                    .HasForeignKey(n => n.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.Patient)
+                    .WithMany()
+                    .HasForeignKey(n => n.PatientId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(n => n.Appointment)
+                    .WithMany()
+                    .HasForeignKey(n => n.AppointmentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(n => n.Template)
+                    .WithMany()
+                    .HasForeignKey(n => n.TemplateId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // 8. OTP Verifications & Purpose Enums

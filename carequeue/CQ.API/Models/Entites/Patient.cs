@@ -32,7 +32,7 @@ namespace carequeue.CQ.API.Models.Entites
         public string? Email { get; set; }
 
         [Required]
-        [StringLength(15)]
+        [StringLength(10)]
         public string Phone { get; set; } = string.Empty;
 
         [Required]

@@ -16,6 +16,24 @@ namespace carequeue.Migrations
                 .Annotation("Npgsql:PostgresExtension:citext", ",,");
 
             migrationBuilder.CreateTable(
+                name: "Customers",
+                columns: table => new
+                {
+                    CustomerId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Email = table.Column<string>(type: "citext", maxLength: 255, nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    Phone = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now())")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Customers", x => x.CustomerId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Hospitals",
                 columns: table => new
                 {
@@ -79,21 +97,25 @@ namespace carequeue.Migrations
                 name: "Patients",
                 columns: table => new
                 {
-                    PatientId = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    PatientId = table.Column<Guid>(type: "uuid", nullable: false),
                     HospitalId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Phone = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
-                    PhoneExtension = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    Phone = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     DOB = table.Column<DateTime>(type: "date", nullable: false),
                     Gender = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Address = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now())")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Patients", x => x.PatientId);
+                    table.ForeignKey(
+                        name: "FK_Patients_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Patients_Hospitals_HospitalId",
                         column: x => x.HospitalId,
@@ -136,7 +158,7 @@ namespace carequeue.Migrations
                     AppointmentId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     HospitalId = table.Column<int>(type: "integer", nullable: false),
-                    PatientId = table.Column<int>(type: "integer", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uuid", nullable: false),
                     DoctorId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedByUserId = table.Column<int>(type: "integer", nullable: false),
                     AppointmentDate = table.Column<DateTime>(type: "date", nullable: false),
@@ -206,17 +228,20 @@ namespace carequeue.Migrations
                     NotificationId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     HospitalId = table.Column<int>(type: "integer", nullable: false),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
-                    PatientId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerId = table.Column<int>(type: "integer", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uuid", nullable: false),
                     AppointmentId = table.Column<int>(type: "integer", nullable: true),
                     TemplateId = table.Column<int>(type: "integer", nullable: false),
                     Channel = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Recipient = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
+                    Subject = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: true),
                     Message = table.Column<string>(type: "text", nullable: false),
                     SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     FailureReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    RetryCount = table.Column<int>(type: "integer", nullable: false)
+                    RetryCount = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "timezone('utc', now())"),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -228,22 +253,28 @@ namespace carequeue.Migrations
                         principalColumn: "AppointmentId",
                         onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
+                        name: "FK_Notifications_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Notifications_Hospitals_HospitalId",
                         column: x => x.HospitalId,
                         principalTable: "Hospitals",
                         principalColumn: "HospitalId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Notifications_NotificationTemplates_TemplateId",
+                        column: x => x.TemplateId,
+                        principalTable: "NotificationTemplates",
+                        principalColumn: "TemplateId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Notifications_Patients_PatientId",
                         column: x => x.PatientId,
                         principalTable: "Patients",
                         principalColumn: "PatientId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "UserId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -296,6 +327,12 @@ namespace carequeue.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Customers_Email",
+                table: "Customers",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Doctors_HospitalId",
                 table: "Doctors",
                 column: "HospitalId");
@@ -311,6 +348,11 @@ namespace carequeue.Migrations
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notifications_CustomerId",
+                table: "Notifications",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Notifications_HospitalId",
                 table: "Notifications",
                 column: "HospitalId");
@@ -321,14 +363,19 @@ namespace carequeue.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Notifications_UserId",
+                name: "IX_Notifications_TemplateId",
                 table: "Notifications",
-                column: "UserId");
+                column: "TemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OtpVerifications_UserId",
                 table: "OtpVerifications",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Patients_CustomerId",
+                table: "Patients",
+                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Patients_HospitalId",
@@ -354,9 +401,6 @@ namespace carequeue.Migrations
                 name: "EmailLogs");
 
             migrationBuilder.DropTable(
-                name: "NotificationTemplates");
-
-            migrationBuilder.DropTable(
                 name: "OtpVerifications");
 
             migrationBuilder.DropTable(
@@ -366,6 +410,9 @@ namespace carequeue.Migrations
                 name: "Appointments");
 
             migrationBuilder.DropTable(
+                name: "NotificationTemplates");
+
+            migrationBuilder.DropTable(
                 name: "Doctors");
 
             migrationBuilder.DropTable(
@@ -373,6 +420,9 @@ namespace carequeue.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Customers");
 
             migrationBuilder.DropTable(
                 name: "Hospitals");

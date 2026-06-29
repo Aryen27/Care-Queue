@@ -18,13 +18,13 @@ namespace carequeue.CQ.API.Models.Entites
         public Hospital Hospital { get; set; } = null!;
 
         [Required]
-        public int UserId { get; set; }
+        public int CustomerId { get; set; }
 
-        [ForeignKey(nameof(UserId))]
-        public User User { get; set; } = null!;
+        [ForeignKey(nameof(CustomerId))]
+        public Customer Customer { get; set; } = null!;
 
         [Required]
-        public int PatientId { get; set; }
+        public Guid PatientId { get; set; }
 
         [ForeignKey(nameof(PatientId))]
         public Patient Patient { get; set; } = null!;
@@ -36,6 +36,9 @@ namespace carequeue.CQ.API.Models.Entites
 
         [Required]
         public int TemplateId { get; set; }
+
+        [ForeignKey(nameof(TemplateId))]
+        public NotificationTemplate Template { get; set; } = null!;
 
         [Required]
         [StringLength(20)]
@@ -49,6 +52,9 @@ namespace carequeue.CQ.API.Models.Entites
         [StringLength(250)]
         public string Recipient { get; set; } = string.Empty;
 
+        [StringLength(250)]
+        public string? Subject { get; set; }
+
         [Required]
         public string Message { get; set; } = string.Empty;
 
@@ -57,6 +63,10 @@ namespace carequeue.CQ.API.Models.Entites
         [StringLength(500)]
         public string? FailureReason { get; set; }
 
-        public int RetryCount { get; set; }
+        public int RetryCount { get; set; } = 0;
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
     }
 }

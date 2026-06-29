@@ -9,10 +9,8 @@ namespace carequeue.CQ.API.DTOs.AppointmentDTO
         public int HospitalId { get; set; }
         public string HospitalName { get; set; } = string.Empty;
 
-        public int PatientId { get; set; }
         public string PatientName { get; set; } = string.Empty;
 
-        public Guid DoctorId { get; set; }
         public string DoctorName { get; set; } = string.Empty;
 
         public int CreatedByUserId { get; set; }
