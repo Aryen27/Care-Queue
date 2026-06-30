@@ -18,10 +18,10 @@ namespace carequeue.CQ.API.Models.Entites
         public Hospital Hospital { get; set; } = null!;
 
         [Required]
-        public int? CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
-        public Customer? Customer { get; set; } = null!;
+        public Customer Customer { get; set; } = null!;
 
         [Required]
         public Guid PatientId { get; set; }
