@@ -25,14 +25,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="CQ.API\Controllers\admins\" />
+    <Folder Include="CQ.API\Controllers\staff\" />
     <Folder Include="CQ.API\Controllers\patients\" />
     <Folder Include="CQ.API\Helpers\" />
     <Folder Include="CQ.API\Events\" />
     <Folder Include="CQ.API\Configurations\" />
     <Folder Include="CQ.API\Middlewares\" />
     <Folder Include="CQ.API\Models\ViewModels\" />
-    <Folder Include="CQ.API\Services\" />
     <Folder Include="CQ.Blazor\Components\" />
     <Folder Include="CQ.Blazor\Pages\" />
     <Folder Include="CQ.Database\" />
