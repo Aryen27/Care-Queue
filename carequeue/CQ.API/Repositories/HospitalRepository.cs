@@ -46,5 +46,11 @@ namespace carequeue.CQ.API.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> ExistsAsync(int id)
+        {
+            return await _context.Hospitals
+                .AnyAsync(h => h.HospitalId == id);
+        }
     }
 }

@@ -14,5 +14,7 @@ namespace carequeue.CQ.API.Repositories.Interfaces
         Task DeleteAsync(Hospital hospital);
 
         Task SaveChangesAsync();
+
+        Task<bool> ExistsAsync(int id);
     }
 }
