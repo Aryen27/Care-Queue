@@ -87,5 +87,23 @@ namespace carequeue.CQ.API.Models.DTOs.Common
                     ValidationErrors = errors
                 });
         }
+
+        public ServiceResult<T> ToGeneric<T>()
+        {
+            if (Success)
+            {
+                throw new InvalidOperationException(
+                    "A successful ServiceResult cannot be converted to ServiceResult<T>. Use ServiceResult<T>.Ok() instead.");
+            }
+
+            if (Error?.ValidationErrors?.Any() == true)
+            {
+                return ServiceResult<T>.Validation(Error.ValidationErrors);
+            }
+
+            return ServiceResult<T>.Fail(
+                Error!.Code,
+                Error.Message);
+        }
     }
 }
