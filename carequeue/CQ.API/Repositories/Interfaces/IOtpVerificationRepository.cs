@@ -1,4 +1,4 @@
-﻿using carequeue.CQ.API.Models.Entites;
+﻿using carequeue.CQ.API.Models.Entities;
 using carequeue.CQ.API.Models.Enums;
 
 namespace carequeue.CQ.API.Repositories.Interfaces

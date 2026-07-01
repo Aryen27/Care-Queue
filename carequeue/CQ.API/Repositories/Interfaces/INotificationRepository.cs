@@ -1,10 +1,8 @@
-﻿using carequeue.CQ.API.Models.Entites;
+﻿using carequeue.CQ.API.Models.Entities;
 using carequeue.CQ.API.Models.Enums;
 
 namespace carequeue.CQ.API.Repositories.Interfaces
 {
-    public interface INotificationRepository
-    {
         public interface INotificationRepository
         {
             Task<IEnumerable<Notification>> GetAllAsync();
@@ -37,5 +35,4 @@ namespace carequeue.CQ.API.Repositories.Interfaces
 
             Task<IEnumerable<Notification>> GetPendingNotificationsAsync();
         }
-    }
 }

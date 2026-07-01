@@ -1,5 +1,5 @@
 ﻿using carequeue.CQ.API.Data;
-using carequeue.CQ.API.Models.Entites;
+using carequeue.CQ.API.Models.Entities;
 using carequeue.CQ.API.Models.Enums;
 using carequeue.CQ.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;

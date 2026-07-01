@@ -1,5 +1,5 @@
 ﻿using carequeue.CQ.API.DTOs.CustomerDTO;
-using carequeue.CQ.API.Models.Entites;
+using carequeue.CQ.API.Models.Entities;
 
 namespace carequeue.CQ.API.Mappers
 {

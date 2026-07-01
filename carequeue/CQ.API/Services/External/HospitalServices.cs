@@ -1,6 +1,6 @@
 ﻿using carequeue.CQ.API.DTOs.HospitalDTO;
 using carequeue.CQ.API.Models.DTOs.Common;
-using carequeue.CQ.API.Models.Entites;
+using carequeue.CQ.API.Models.Entities;
 using carequeue.CQ.API.Repositories.Interfaces;
 
 

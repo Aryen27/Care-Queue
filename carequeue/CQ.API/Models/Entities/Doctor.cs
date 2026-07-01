@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace carequeue.CQ.API.Models.Entites
+namespace carequeue.CQ.API.Models.Entities
 {
     [Table("Doctors")]
     public class Doctor

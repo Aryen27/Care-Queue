@@ -9,7 +9,7 @@ public class NotificationRequest
 
     public int TemplateId { get; set; }
 
-    public NotificationChannel Channel { get; set; }
+    public NotificationChannel Channel { get; set; } = NotificationChannel.Email;
 
     public Dictionary<string, string> TemplateValues { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿using carequeue.CQ.API.Models.Entites;
+﻿using carequeue.CQ.API.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace carequeue.CQ.API.Data
