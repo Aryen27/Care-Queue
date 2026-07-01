@@ -19,9 +19,10 @@ namespace carequeue.CQ.API.DTOs.DoctorDTO
         [Range(0, double.MaxValue)]
         public decimal ConsultationFee { get; set; }
 
+        [Required]
         [EmailAddress]
         [StringLength(150)]
-        public string? Email { get; set; }
+        public string Email { get; set; }
 
         [Required]
         [Phone]

@@ -18,7 +18,7 @@ namespace carequeue.CQ.API.Repositories.Interfaces
 
         Task<bool> ExistsAsync(Guid doctorId);
 
-
+        Task<bool> EmailExistsAsync(string email);
         Task<Doctor?> GetByEmailAsync(string email);
 
         Task<IEnumerable<Doctor>> GetDoctorsByHospitalIdAsync(int hospitalId);

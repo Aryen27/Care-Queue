@@ -14,7 +14,7 @@
 
         public decimal ConsultationFee { get; set; }
 
-        public string? Email { get; set; }
+        public string Email { get; set; }
 
         public string Phone { get; set; } = string.Empty;
 

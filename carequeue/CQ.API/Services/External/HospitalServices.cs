@@ -4,7 +4,7 @@ using carequeue.CQ.API.Models.Entites;
 using carequeue.CQ.API.Repositories.Interfaces;
 
 
-namespace carequeue.CQ.API.Services
+namespace carequeue.CQ.API.Services.External
 {
     public class HospitalServices
     {

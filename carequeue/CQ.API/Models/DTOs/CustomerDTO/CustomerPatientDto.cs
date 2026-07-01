@@ -9,8 +9,6 @@
 
         public string Phone { get; set; } = string.Empty;
 
-        public string PhoneExtension { get; set; } = string.Empty;
-
         public string? Email { get; set; }
 
         public DateTime DOB { get; set; }

@@ -5,7 +5,7 @@ using carequeue.CQ.API.Repositories.Interfaces;
 using carequeue.CQ.API.Services.Validators;
 using System.ComponentModel.DataAnnotations;
 
-namespace carequeue.CQ.API.Services
+namespace carequeue.CQ.API.Services.External
 {
     public class UserService
     {

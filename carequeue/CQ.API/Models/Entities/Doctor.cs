@@ -28,9 +28,10 @@ namespace carequeue.CQ.API.Models.Entites
         [Column(TypeName = "decimal(18,2)")]
         public decimal ConsultationFee { get; set; }
 
+        [Required]
         [StringLength(150)]
         [EmailAddress]
-        public string? Email { get; set; }
+        public string Email { get; set; }
 
         [Required]
         [StringLength(20)]
