@@ -1,4 +1,5 @@
-﻿using carequeue.CQ.API.Models.Entities;
+﻿using carequeue.CQ.API.Models.Entites;
+using carequeue.CQ.API.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace carequeue.CQ.API.Data
@@ -18,6 +19,8 @@ namespace carequeue.CQ.API.Data
         public DbSet<OtpVerification> OtpVerifications { get; set; }
         public DbSet<EmailLog> EmailLogs { get; set; }
         public DbSet<NotificationTemplate> NotificationTemplates { get; set; }
+
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -209,6 +212,49 @@ namespace carequeue.CQ.API.Data
                 entity.Property(nt => nt.Name).HasMaxLength(100).IsRequired();
                 entity.Property(nt => nt.Subject).HasMaxLength(200).IsRequired();
                 entity.Property(nt => nt.Body).IsRequired();
+            });
+
+            // 11. Payments
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.ToTable("Payments");
+
+                // Indexes for fast querying when webhooks hit your API
+                entity.HasIndex(p => p.RazorpayOrderId).IsUnique();
+                entity.HasIndex(p => p.RazorpayPaymentId).IsUnique();
+
+                entity.Property(p => p.Amount)
+                    .HasPrecision(10, 2)
+                    .IsRequired();
+
+                entity.Property(p => p.Currency)
+                    .HasDefaultValue("INR")
+                    .HasMaxLength(10);
+
+                // Map Enum to String for clean PostgreSQL tables
+                entity.Property(p => p.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(30)
+                    .IsRequired();
+
+                entity.Property(p => p.CreatedAt).HasDefaultValueSql("timezone('utc', now())");
+
+                // Relationships
+                entity.HasOne(p => p.Hospital)
+                    .WithMany()
+                    .HasForeignKey(p => p.HospitalId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(p => p.Customer)
+                    .WithMany()
+                    .HasForeignKey(p => p.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Ensure 1:1 or 1:Many rule depending on if an appointment can have multiple retry payments
+                entity.HasOne(p => p.Appointment)
+                    .WithMany()
+                    .HasForeignKey(p => p.AppointmentId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
