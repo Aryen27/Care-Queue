@@ -75,5 +75,17 @@ namespace carequeue.CQ.API.Repositories
         {
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<Doctor>> GetDoctorsByHospitalAndSpecializationAsync(
+    int hospitalId,
+    string specialization)
+        {
+            return await _context.Doctors.Where(d =>
+                    d.HospitalId == hospitalId &&
+                    d.Specialization.Trim().ToLower() == specialization.Trim().ToLower() &&
+                    d.IsActive &&
+                    d.IsAvailable)
+                    .ToListAsync();
+        }
     }
 }

@@ -22,5 +22,7 @@ namespace carequeue.CQ.API.Repositories.Interfaces
         Task<Doctor?> GetByEmailAsync(string email);
 
         Task<IEnumerable<Doctor>> GetDoctorsByHospitalIdAsync(int hospitalId);
+
+        Task<IEnumerable<Doctor>> GetDoctorsByHospitalAndSpecializationAsync(int hospitalId, string specialization);
     }
 }

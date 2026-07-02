@@ -1,6 +1,4 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace carequeue.CQ.API.Models.DTOs.Common
+﻿namespace carequeue.CQ.API.Models.DTOs.Common
 {
     public class ServiceResult<T> : ServiceResult
     {
