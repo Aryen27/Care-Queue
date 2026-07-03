@@ -44,6 +44,9 @@ namespace carequeue.CQ.API.Models.Entities
         public TimeSpan AppointmentTime { get; set; }
 
         [Required]
+        public int DurationMinutes { get; set; } = 30;
+
+        [Required]
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled; 
         public DateTime CreatedAt { get; set; }
 

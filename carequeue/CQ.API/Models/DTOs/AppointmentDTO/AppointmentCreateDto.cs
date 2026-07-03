@@ -20,6 +20,9 @@ namespace carequeue.CQ.API.DTOs.AppointmentDTO
         [Required]
         public TimeSpan AppointmentTime { get; set; }
 
+        [Required]
+        public int DurationMinutes { get; set; } = 30;
+
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
     }
 }

@@ -1,190 +1,121 @@
-﻿using carequeue.CQ.API.DTOs.DoctorDTO;
-using carequeue.CQ.API.Models.DTOs.Common;
+﻿using carequeue.CQ.API.Models.DTOs.Common;
+using carequeue.CQ.API.Models.DTOs.DoctorDTO;
 using carequeue.CQ.API.Repositories.Interfaces;
+using carequeue.CQ.API.Services.Validators;
 
 namespace carequeue.CQ.API.Services.External
 {
-    public class DoctorAvailabilityService
+    public partial class DoctorAvailabilityService
     {
         private readonly IDoctorRepository _doctorRepository;
         private readonly IDoctorScheduleRepository _doctorScheduleRepository;
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly DoctorAvailabilityValidator _validator;
 
         public DoctorAvailabilityService(
             IDoctorRepository doctorRepository,
             IDoctorScheduleRepository doctorScheduleRepository,
-            IAppointmentRepository appointmentRepository)
+            IAppointmentRepository appointmentRepository,
+            DoctorAvailabilityValidator validator)
         {
             _doctorRepository = doctorRepository;
             _doctorScheduleRepository = doctorScheduleRepository;
             _appointmentRepository = appointmentRepository;
+            _validator = validator;
         }
 
-        public async Task<ServiceResult<IEnumerable<DoctorListDto>>> GetAvailableDoctorsAsync(
-            int hospitalId,
-            string specialization,
-            DateTime appointmentDate,
-            TimeSpan appointmentTime)
+        public async Task<ServiceResult<IEnumerable<DoctorAvailabilityDto>>> GetAvailableDoctorsAsync(
+            DoctorAvailabilityRequestDto request)
         {
+            var validation = await _validator.ValidateAvailabilityRequestAsync(request);
+
+            if (!validation.Success)
+            {
+                return validation.ToGeneric<IEnumerable<DoctorAvailabilityDto>>();
+            }
+
             var doctors =
                 await _doctorRepository.GetDoctorsByHospitalAndSpecializationAsync(
-                    hospitalId,
-                    specialization);
+                    request.HospitalId,
+                    request.Specialization);
 
-            var availableDoctors = new List<DoctorListDto>();
+            var availableDoctors = new List<DoctorAvailabilityDto>();
 
             foreach (var doctor in doctors)
             {
-                var available = await IsDoctorAvailableAsync(
-                    doctor.DoctorId,
-                    appointmentDate,
-                    appointmentTime);
+                var doctorValidation =
+                    await _validator.ValidateDoctorAvailabilityAsync(
+                        doctor.DoctorId,
+                        request.AppointmentDate,
+                        request.AppointmentTime,
+                        request.DurationMinutes);
 
-                if (available.Success && available.Data)
+                if (!doctorValidation.Success)
                 {
-                    availableDoctors.Add(new DoctorListDto
-                    {
-                        DoctorId = doctor.DoctorId,
-                        Name = doctor.Name,
-                        Specialization = doctor.Specialization,
-                        ConsultationFee = doctor.ConsultationFee,
-                        IsAvailable = doctor.IsAvailable,
-                        IsActive = doctor.IsActive
-                    });
+                    continue;
                 }
+
+                availableDoctors.Add(new DoctorAvailabilityDto
+                {
+                    DoctorId = doctor.DoctorId,
+                    DoctorName = doctor.Name,
+                    Specialization = doctor.Specialization,
+                    ConsultationFee = doctor.ConsultationFee,
+
+                    // Only the requested slot is available since it is already validated.
+                    AvailableSlots = new[]
+                    {
+                        request.AppointmentTime
+                    }
+                });
             }
 
-            return ServiceResult<IEnumerable<DoctorListDto>>
+            return ServiceResult<IEnumerable<DoctorAvailabilityDto>>
                 .Ok(availableDoctors);
         }
 
-        public async Task<ServiceResult<IEnumerable<DoctorListDto>>> GetAlternativeDoctorsAsync(
-            int hospitalId,
-            string specialization,
-            DateTime appointmentDate,
-            TimeSpan appointmentTime)
+        public async Task<ServiceResult<IEnumerable<DoctorAvailabilityDto>>> GetAlternativeAvailabilityAsync(
+            DoctorAvailabilityRequestDto request)
         {
-            // Currently returns all available doctors.
-            // Later this can recommend nearby time slots or rank doctors.
+            var validation = await _validator.ValidateAvailabilityRequestAsync(request);
 
-            return await GetAvailableDoctorsAsync(
-                hospitalId,
-                specialization,
-                appointmentDate,
-                appointmentTime);
-        }
-
-        public async Task<ServiceResult<IEnumerable<TimeSpan>>> GetAvailableSlotsAsync(
-            Guid doctorId,
-            DateTime appointmentDate)
-        {
-            var schedule =
-                await _doctorScheduleRepository.GetScheduleByDoctorAndDayAsync(
-                    doctorId,
-                    appointmentDate.DayOfWeek);
-
-            if (schedule == null)
+            if (!validation.Success)
             {
-                return ServiceResult<IEnumerable<TimeSpan>>.Fail(
-                    ErrorCodes.NotFound,
-                    "Doctor does not work on the selected day.");
+                return validation.ToGeneric<IEnumerable<DoctorAvailabilityDto>>();
             }
 
-            var bookedAppointments =
-                await _appointmentRepository.GetDoctorAppointmentsByDateAsync(
-                    doctorId,
-                    appointmentDate);
+            var doctors =
+                await _doctorRepository.GetDoctorsByHospitalAndSpecializationAsync(
+                    request.HospitalId,
+                    request.Specialization);
 
-            var bookedSlots = bookedAppointments
-                .Select(a => a.AppointmentTime)
-                .ToHashSet();
+            var alternatives = new List<DoctorAvailabilityDto>();
 
-            var availableSlots = GenerateSlots(schedule)
-                .Where(slot => !bookedSlots.Contains(slot));
-
-            return ServiceResult<IEnumerable<TimeSpan>>
-                .Ok(availableSlots);
-        }
-
-        public async Task<ServiceResult<bool>> IsDoctorAvailableAsync(
-            Guid doctorId,
-            DateTime appointmentDate,
-            TimeSpan appointmentTime)
-        {
-            var schedule =
-                await _doctorScheduleRepository.GetScheduleByDoctorAndDayAsync(
-                    doctorId,
-                    appointmentDate.DayOfWeek);
-
-            if (schedule == null)
+            foreach (var doctor in doctors)
             {
-                return ServiceResult<bool>.Ok(false);
+                var slots =
+                    await GetAvailableSlotsAsync(
+                        doctor.DoctorId,
+                        request.AppointmentDate,
+                        request.DurationMinutes);
+
+                if (!slots.Success || slots.Data == null || !slots.Data.Any())
+                {
+                    continue;
+                }
+
+                alternatives.Add(new DoctorAvailabilityDto
+                {
+                    DoctorId = doctor.DoctorId,
+                    DoctorName = doctor.Name,
+                    Specialization = doctor.Specialization,
+                    ConsultationFee = doctor.ConsultationFee,
+                    AvailableSlots = slots.Data
+                });
             }
 
-            if (!schedule.isAvailable || !schedule.IsActive)
-            {
-                return ServiceResult<bool>.Ok(false);
-            }
-
-            if (!IsWithinWorkingHours(schedule, appointmentTime))
-            {
-                return ServiceResult<bool>.Ok(false);
-            }
-
-            if (!IsValidSlot(schedule, appointmentTime))
-            {
-                return ServiceResult<bool>.Ok(false);
-            }
-
-            var exists =
-                await _appointmentRepository.AppointmentExistsAsync(
-                    doctorId,
-                    appointmentDate,
-                    appointmentTime);
-
-            return ServiceResult<bool>.Ok(!exists);
-        }
-
-        private static bool IsWithinWorkingHours(
-            DoctorSchedule schedule,
-            TimeSpan appointmentTime)
-        {
-            var start = schedule.StartTime.ToTimeSpan();
-            var end = schedule.EndTime.ToTimeSpan();
-
-            return appointmentTime >= start &&
-                   appointmentTime < end;
-        }
-
-        private static bool IsValidSlot(
-            DoctorSchedule schedule,
-            TimeSpan appointmentTime)
-        {
-            var start = schedule.StartTime.ToTimeSpan();
-
-            var minutes =
-                (appointmentTime - start).TotalMinutes;
-
-            return minutes % schedule.SlotDurationMinutes == 0;
-        }
-
-        private static IEnumerable<TimeSpan> GenerateSlots(
-            DoctorSchedule schedule)
-        {
-            var slots = new List<TimeSpan>();
-
-            var current = schedule.StartTime.ToTimeSpan();
-            var end = schedule.EndTime.ToTimeSpan();
-
-            while (current < end)
-            {
-                slots.Add(current);
-
-                current = current.Add(
-                    TimeSpan.FromMinutes(schedule.SlotDurationMinutes));
-            }
-
-            return slots;
+            return ServiceResult<IEnumerable<DoctorAvailabilityDto>>
+                .Ok(alternatives);
         }
     }
 }
