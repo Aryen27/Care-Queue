@@ -1,5 +1,6 @@
 ﻿using carequeue.CQ.API.Models.DTOs.Common;
 using carequeue.CQ.API.Models.DTOs.DoctorDTO;
+using carequeue.CQ.API.Models.Entities;
 using carequeue.CQ.API.Repositories.Interfaces;
 using carequeue.CQ.API.Services.Validators;
 
@@ -55,19 +56,10 @@ namespace carequeue.CQ.API.Services.External
                     continue;
                 }
 
-                availableDoctors.Add(new DoctorAvailabilityDto
-                {
-                    DoctorId = doctor.DoctorId,
-                    DoctorName = doctor.Name,
-                    Specialization = doctor.Specialization,
-                    ConsultationFee = doctor.ConsultationFee,
-
-                    // Only the requested slot is available since it is already validated.
-                    AvailableSlots = new[]
-                    {
-                        request.AppointmentTime
-                    }
-                });
+                availableDoctors.Add(
+                    ToAvailabilityDto(
+                        doctor,
+                        new[] { request.AppointmentTime }));
             }
 
             return ServiceResult<IEnumerable<DoctorAvailabilityDto>>
@@ -104,18 +96,28 @@ namespace carequeue.CQ.API.Services.External
                     continue;
                 }
 
-                alternatives.Add(new DoctorAvailabilityDto
-                {
-                    DoctorId = doctor.DoctorId,
-                    DoctorName = doctor.Name,
-                    Specialization = doctor.Specialization,
-                    ConsultationFee = doctor.ConsultationFee,
-                    AvailableSlots = slots.Data
-                });
+                alternatives.Add(
+                    ToAvailabilityDto(
+                        doctor,
+                        slots.Data!));
             }
 
             return ServiceResult<IEnumerable<DoctorAvailabilityDto>>
                 .Ok(alternatives);
+        }
+
+        private static DoctorAvailabilityDto ToAvailabilityDto(
+                        Doctor doctor,
+                        IEnumerable<TimeSpan> availableSlots)
+        {
+            return new DoctorAvailabilityDto
+            {
+                DoctorId = doctor.DoctorId,
+                DoctorName = doctor.Name,
+                Specialization = doctor.Specialization,
+                ConsultationFee = doctor.ConsultationFee,
+                AvailableSlots = availableSlots
+            };
         }
     }
 }

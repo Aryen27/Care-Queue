@@ -31,6 +31,11 @@ namespace carequeue.CQ.API.Repositories.Interfaces
 
         Task<IEnumerable<Appointment>> GetAppointmentsByDateAsync(DateTime appointmentDate);
 
+        // Bulk search appointments
+        Task<IEnumerable<Appointment>> GetDoctorAppointmentsByDateBulkAsync(
+            IEnumerable<Guid> doctorIds,
+            DateTime date);
+
         // Scheduling Queries
         Task<bool> AppointmentExistsAsync(
             Guid doctorId,

@@ -35,6 +35,17 @@ namespace carequeue.CQ.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<DoctorSchedule>> GetSchedulesByDoctorsAndDayBulkAsync(
+            IEnumerable<Guid> doctorIds,
+            DayOfWeek dayOfWeek)
+        {
+            return await _context.DoctorSchedules
+                .Where(ds =>
+                    doctorIds.Contains(ds.DoctorId) &&
+                    ds.DayOfWeek == dayOfWeek)
+                .ToListAsync();
+        }
+
         public async Task<DoctorSchedule?> GetScheduleByDoctorAndDayAsync(
             Guid doctorId,
             DayOfWeek dayOfWeek)

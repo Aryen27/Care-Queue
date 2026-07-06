@@ -20,6 +20,11 @@
         // Search Queries
         Task<IEnumerable<DoctorSchedule>> GetSchedulesByDoctorIdAsync(Guid doctorId);
 
+        //Bulk Search 
+        Task<IEnumerable<DoctorSchedule>> GetSchedulesByDoctorsAndDayBulkAsync(
+        IEnumerable<Guid> doctorIds,
+        DayOfWeek dayOfWeek);
+
         Task<DoctorSchedule?> GetScheduleByDoctorAndDayAsync(
             Guid doctorId,
             DayOfWeek dayOfWeek);
