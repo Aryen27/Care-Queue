@@ -42,8 +42,8 @@ namespace carequeue.CQ.API.Mappers
 
                 DoctorName = appointment.Doctor.Name,
 
-                CreatedByUserId = appointment.Customer.CustomerId,
-                CreatedByUser = appointment.Customer.Name,
+                CustomerId = appointment.Customer.CustomerId,
+                CustomerName = appointment.Customer.Name,
 
                 AppointmentDate = appointment.AppointmentDate,
                 AppointmentTime = appointment.AppointmentTime,
@@ -89,6 +89,7 @@ namespace carequeue.CQ.API.Mappers
             appointment.HospitalId = dto.HospitalId;
             appointment.PatientId = dto.PatientId;
             appointment.DoctorId = dto.DoctorId;
+            appointment.CustomerId = dto.CustomerId;
 
             appointment.AppointmentDate = dto.AppointmentDate.Date;
             appointment.AppointmentTime = dto.AppointmentTime;

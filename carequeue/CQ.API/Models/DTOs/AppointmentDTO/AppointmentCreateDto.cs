@@ -15,6 +15,9 @@ namespace carequeue.CQ.API.DTOs.AppointmentDTO
         public Guid DoctorId { get; set; }
 
         [Required]
+        public int CustomerId { get; set; }
+
+        [Required]
         public DateTime AppointmentDate { get; set; }
 
         [Required]

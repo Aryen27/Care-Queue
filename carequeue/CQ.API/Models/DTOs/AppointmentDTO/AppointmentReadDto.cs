@@ -12,8 +12,8 @@ namespace carequeue.CQ.API.DTOs.AppointmentDTO
 
         public string DoctorName { get; set; } = string.Empty;
 
-        public int CreatedByUserId { get; set; }
-        public string CreatedByUser { get; set; } = string.Empty;
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
 
         public DateTime AppointmentDate { get; set; }
 

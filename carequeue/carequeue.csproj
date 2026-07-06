@@ -27,8 +27,9 @@
   <ItemGroup>
     <Folder Include="CQ.API\Controllers\staff\" />
     <Folder Include="CQ.API\Controllers\patients\" />
+    <Folder Include="CQ.API\Services\Events\Events\" />
+    <Folder Include="CQ.API\Services\Events\EventHandler\" />
     <Folder Include="CQ.API\Helpers\" />
-    <Folder Include="CQ.API\Events\" />
     <Folder Include="CQ.API\Configurations\" />
     <Folder Include="CQ.API\Middlewares\" />
     <Folder Include="CQ.API\Models\ViewModels\" />
