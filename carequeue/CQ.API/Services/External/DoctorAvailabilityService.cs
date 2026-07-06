@@ -25,31 +25,78 @@ namespace carequeue.CQ.API.Services.External
             _validator = validator;
         }
 
+        private async Task<DoctorAvailabilityContext> BuildAvailabilityContextAsync(
+            DoctorAvailabilityRequestDto request)
+        {
+            var doctors =
+        (await _doctorRepository.GetDoctorsByHospitalAndSpecializationAsync(
+            request.HospitalId,
+            request.Specialization))
+        .ToList();
+
+            var doctorIds = doctors
+                .Select(d => d.DoctorId)
+                .ToList();
+
+            var schedules =
+                await _doctorScheduleRepository
+                    .GetSchedulesByDoctorsAndDayBulkAsync(
+                        doctorIds,
+                        request.AppointmentDate.DayOfWeek);
+
+            var appointments =
+                await _appointmentRepository
+                    .GetDoctorAppointmentsByDateBulkAsync(
+                        doctorIds,
+                        request.AppointmentDate);
+
+            return new DoctorAvailabilityContext
+            {
+                Doctors = doctors,
+
+                Schedules = schedules.ToDictionary(
+                    s => s.DoctorId),
+
+                Appointments = appointments
+                    .GroupBy(a => a.DoctorId)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.ToList())
+            };
+        }
+
         public async Task<ServiceResult<IEnumerable<DoctorAvailabilityDto>>> GetAvailableDoctorsAsync(
             DoctorAvailabilityRequestDto request)
         {
-            var validation = await _validator.ValidateAvailabilityRequestAsync(request);
+            var validation = _validator.ValidateAvailabilityRequest(request);
 
             if (!validation.Success)
             {
                 return validation.ToGeneric<IEnumerable<DoctorAvailabilityDto>>();
             }
 
-            var doctors =
-                await _doctorRepository.GetDoctorsByHospitalAndSpecializationAsync(
-                    request.HospitalId,
-                    request.Specialization);
+            var context = await BuildAvailabilityContextAsync(request);
 
             var availableDoctors = new List<DoctorAvailabilityDto>();
 
-            foreach (var doctor in doctors)
+            foreach (var doctor in context.Doctors)
             {
+                context.Schedules.TryGetValue(
+                    doctor.DoctorId,
+                    out var schedule);
+
+                context.Appointments.TryGetValue(
+                    doctor.DoctorId,
+                    out var appointments);
+
+                appointments ??= [];
+
                 var doctorValidation =
-                    await _validator.ValidateDoctorAvailabilityAsync(
-                        doctor.DoctorId,
-                        request.AppointmentDate,
-                        request.AppointmentTime,
-                        request.DurationMinutes);
+                    _validator.ValidateDoctorAvailability(
+                        doctor,
+                        schedule,
+                        appointments,
+                        request);
 
                 if (!doctorValidation.Success)
                 {
@@ -69,37 +116,44 @@ namespace carequeue.CQ.API.Services.External
         public async Task<ServiceResult<IEnumerable<DoctorAvailabilityDto>>> GetAlternativeAvailabilityAsync(
             DoctorAvailabilityRequestDto request)
         {
-            var validation = await _validator.ValidateAvailabilityRequestAsync(request);
+            var validation = _validator.ValidateAvailabilityRequest(request);
 
             if (!validation.Success)
             {
                 return validation.ToGeneric<IEnumerable<DoctorAvailabilityDto>>();
             }
 
-            var doctors =
-                await _doctorRepository.GetDoctorsByHospitalAndSpecializationAsync(
-                    request.HospitalId,
-                    request.Specialization);
-
             var alternatives = new List<DoctorAvailabilityDto>();
 
-            foreach (var doctor in doctors)
-            {
-                var slots =
-                    await GetAvailableSlotsAsync(
-                        doctor.DoctorId,
-                        request.AppointmentDate,
-                        request.DurationMinutes);
+            var context = await BuildAvailabilityContextAsync(request);
 
-                if (!slots.Success || slots.Data == null || !slots.Data.Any())
-                {
+            foreach (var doctor in context.Doctors)
+            {
+                context.Schedules.TryGetValue(
+                    doctor.DoctorId,
+                    out var schedule);
+
+                context.Appointments.TryGetValue(
+                    doctor.DoctorId,
+                    out var appointments);
+
+                appointments ??= [];
+
+                if (schedule == null)
                     continue;
-                }
+
+                var slots = GetAvailableSlots(
+                    schedule,
+                    appointments,
+                    request.DurationMinutes);
+
+                if (!slots.Any())
+                    continue;
 
                 alternatives.Add(
                     ToAvailabilityDto(
                         doctor,
-                        slots.Data!));
+                        slots));
             }
 
             return ServiceResult<IEnumerable<DoctorAvailabilityDto>>

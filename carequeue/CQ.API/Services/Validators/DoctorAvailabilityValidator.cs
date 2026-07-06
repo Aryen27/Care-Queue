@@ -1,24 +1,12 @@
 ﻿using carequeue.CQ.API.Models.DTOs.Common;
 using carequeue.CQ.API.Models.DTOs.DoctorDTO;
 using carequeue.CQ.API.Models.Entities;
-using carequeue.CQ.API.Repositories.Interfaces;
 
 namespace carequeue.CQ.API.Services.Validators
 {
     public class DoctorAvailabilityValidator
     {
-        private readonly IDoctorRepository _doctorRepository;
-        private readonly IDoctorScheduleRepository _doctorScheduleRepository;
-
-        public DoctorAvailabilityValidator(
-            IDoctorRepository doctorRepository,
-            IDoctorScheduleRepository doctorScheduleRepository)
-        {
-            _doctorRepository = doctorRepository;
-            _doctorScheduleRepository = doctorScheduleRepository;
-        }
-
-        public async Task<ServiceResult> ValidateAvailabilityRequestAsync(
+        public ServiceResult ValidateAvailabilityRequest(
             DoctorAvailabilityRequestDto request)
         {
             var errors = new List<ValidationError>();
@@ -62,27 +50,18 @@ namespace carequeue.CQ.API.Services.Validators
 
             if (errors.Any())
             {
-                return ServiceResult.Validation(errors);
+                return Task.FromResult(ServiceResult.Validation(errors));
             }
 
-            return ServiceResult.Ok();
+            return Task.FromResult(ServiceResult.Ok());
         }
 
-        public async Task<ServiceResult> ValidateDoctorAvailabilityAsync(
-            Guid doctorId,
-            DateTime appointmentDate,
-            TimeSpan appointmentTime,
-            int durationMinutes)
+        public ServiceResult ValidateDoctorAvailability(
+            Doctor doctor,
+            DoctorSchedule? schedule,
+            IEnumerable<Appointment> appointments,
+            DoctorAvailabilityRequestDto request)
         {
-            var doctor = await _doctorRepository.GetByIdAsync(doctorId);
-
-            if (doctor == null)
-            {
-                return ServiceResult.Fail(
-                    ErrorCodes.NotFound,
-                    "Doctor not found.");
-            }
-
             if (!doctor.IsActive)
             {
                 return ServiceResult.Fail(
@@ -96,11 +75,6 @@ namespace carequeue.CQ.API.Services.Validators
                     ErrorCodes.Validation,
                     "Doctor is unavailable.");
             }
-
-            var schedule =
-                await _doctorScheduleRepository.GetScheduleByDoctorAndDayAsync(
-                    doctorId,
-                    appointmentDate.DayOfWeek);
 
             if (schedule == null)
             {
@@ -119,8 +93,9 @@ namespace carequeue.CQ.API.Services.Validators
             var start = schedule.StartTime.ToTimeSpan();
             var end = schedule.EndTime.ToTimeSpan();
 
-            if (appointmentTime < start ||
-                appointmentTime.Add(TimeSpan.FromMinutes(durationMinutes)) > end)
+            if (request.AppointmentTime < start ||
+                request.AppointmentTime.Add(
+                    TimeSpan.FromMinutes(request.DurationMinutes)) > end)
             {
                 return ServiceResult.Fail(
                     ErrorCodes.Validation,
@@ -128,13 +103,34 @@ namespace carequeue.CQ.API.Services.Validators
             }
 
             var minutes =
-                (appointmentTime - start).TotalMinutes;
+                (request.AppointmentTime - start).TotalMinutes;
 
             if (minutes % schedule.SlotDurationMinutes != 0)
             {
                 return ServiceResult.Fail(
                     ErrorCodes.Validation,
                     "Appointment time is not aligned with the doctor's schedule.");
+            }
+
+            foreach (var appointment in appointments)
+            {
+                var existingStart = appointment.AppointmentTime;
+                var existingEnd = existingStart.Add(
+                    TimeSpan.FromMinutes(appointment.DurationMinutes));
+
+                var requestedEnd = request.AppointmentTime.Add(
+                    TimeSpan.FromMinutes(request.DurationMinutes));
+
+                var overlap =
+                    request.AppointmentTime < existingEnd &&
+                    requestedEnd > existingStart;
+
+                if (overlap)
+                {
+                    return ServiceResult.Fail(
+                        ErrorCodes.Validation,
+                        "Doctor already has an appointment at the selected time.");
+                }
             }
 
             return ServiceResult.Ok();

@@ -5,46 +5,19 @@ namespace carequeue.CQ.API.Services.External
 {
     public partial class DoctorAvailabilityService
     {
-        public async Task<ServiceResult<IEnumerable<TimeSpan>>> GetAvailableSlotsAsync(
-            Guid doctorId,
-            DateTime appointmentDate,
+        public IEnumerable<TimeSpan> GetAvailableSlots(
+            DoctorSchedule schedule,
+            IEnumerable<Appointment> appointments,
             int durationMinutes)
         {
-            var schedule =
-                await _doctorScheduleRepository.GetScheduleByDoctorAndDayAsync(
-                    doctorId,
-                    appointmentDate.DayOfWeek);
-
-            if (schedule == null)
-            {
-                return ServiceResult<IEnumerable<TimeSpan>>.Fail(
-                    ErrorCodes.NotFound,
-                    "Doctor does not have a schedule for the selected day.");
-            }
-
-            if (!schedule.IsActive || !schedule.isAvailable)
-            {
-                return ServiceResult<IEnumerable<TimeSpan>>.Fail(
-                    ErrorCodes.Validation,
-                    "Doctor is unavailable on the selected day.");
-            }
-
-            var appointments =
-                await _appointmentRepository.GetDoctorAppointmentsByDateAsync(
-                    doctorId,
-                    appointmentDate);
 
             var slots = GenerateSlots(schedule, durationMinutes);
 
-            var availableSlots = slots
-                .Where(slot => !HasAppointmentConflict(
-                    slot,
-                    durationMinutes,
-                    appointments))
-                .ToList();
-
-            return ServiceResult<IEnumerable<TimeSpan>>
-                .Ok(availableSlots);
+            return slots.Where(slot =>
+                !HasAppointmentConflict(
+                slot,
+                durationMinutes,
+                appointments));
         }
 
         private static IEnumerable<TimeSpan> GenerateSlots(
@@ -96,6 +69,16 @@ namespace carequeue.CQ.API.Services.External
             }
 
             return false;
+        }
+
+        // Read-only to store DB Query results in Memory
+        private sealed class DoctorAvailabilityContext
+        {
+            public required IEnumerable<Doctor> Doctors { get; init; }
+
+            public required Dictionary<Guid, DoctorSchedule> Schedules { get; init; }
+
+            public required Dictionary<Guid, List<Appointment>> Appointments { get; init; }
         }
     }
 }
