@@ -10,6 +10,16 @@
 
         public decimal ConsultationFee { get; set; }
 
-        public IEnumerable<TimeSpan> AvailableSlots { get; set; } = [];
+        public bool IsAvailable { get; set; }
+
+        public DateTime AppointmentDate { get; set; }
+
+        public TimeSpan AppointmentTime { get; set; }
+
+        public TimeSpan AppointmentEndTime { get; set; }
+
+        public int DurationMinutes { get; set; }
+
+        public int SlotDurationMinutes { get; set; }
     }
 }
