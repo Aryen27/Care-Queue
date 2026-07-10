@@ -21,10 +21,10 @@ namespace carequeue.CQ.API.Repositories
                 .ToListAsync();
         }
 
-        public async Task<NotificationTemplate?> GetByIdAsync(int templateId)
+        public async Task<NotificationTemplate?> GetByTypeAsync(string type)
         {
             return await _context.NotificationTemplates
-                .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+                .FirstOrDefaultAsync(t => t.Type.Equals(type));
         }
 
         public async Task<NotificationTemplate?> GetByNameAsync(string name)
@@ -33,11 +33,11 @@ namespace carequeue.CQ.API.Repositories
                 .FirstOrDefaultAsync(t => t.Name == name);
         }
 
-        public async Task<IEnumerable<NotificationTemplate>> GetByTypeAsync(TemplateType type)
+        public async Task<NotificationTemplate?> GetByTypeAsync(TemplateType type)
         {
             return await _context.NotificationTemplates
-                .Where(t => t.Type == type)
-                .ToListAsync();
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Type == type);
         }
 
         public async Task<IEnumerable<NotificationTemplate>> GetActiveTemplatesAsync()

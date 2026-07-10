@@ -86,6 +86,19 @@ namespace carequeue.CQ.API.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Appointment>> GetDoctorAppointmentsByDateAsync(
+            Guid doctorId,
+            DateTime date,
+            int? excludeAppointmentId)
+        {
+            return await _context.Appointments
+                .Where(a =>
+                    a.DoctorId == doctorId &&
+                    a.AppointmentDate.Date == date.Date &&
+                    (!excludeAppointmentId.HasValue ||
+                    a.AppointmentId != excludeAppointmentId)).ToListAsync();
+        }
+
         public async Task<bool> AppointmentExistsAsync(
             Guid doctorId,
             DateTime appointmentDate,

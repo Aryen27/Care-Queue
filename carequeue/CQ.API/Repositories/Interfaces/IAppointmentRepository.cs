@@ -36,6 +36,11 @@ namespace carequeue.CQ.API.Repositories.Interfaces
             IEnumerable<Guid> doctorIds,
             DateTime date);
 
+        Task<IEnumerable<Appointment>> GetDoctorAppointmentsByDateAsync(
+            Guid doctorId,
+            DateTime date,
+            int? excludeAppointmentId);
+
         // Scheduling Queries
         Task<bool> AppointmentExistsAsync(
             Guid doctorId,
