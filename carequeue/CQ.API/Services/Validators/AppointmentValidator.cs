@@ -85,6 +85,37 @@ namespace carequeue.CQ.API.Services.Validators
             return ServiceResult.Ok();
         }
 
+        public async Task<ServiceResult> ValidateRescheduleAsync(
+    int appointmentId,
+    AppointmentRescheduleDto dto)
+        {
+            var appointment =
+                await _appointmentRepository.GetByIdAsync(appointmentId);
+
+            if (appointment == null)
+            {
+                return ServiceResult.Fail(
+                    ErrorCodes.NotFound,
+                    "Appointment not found.");
+            }
+
+            var updateDto = new AppointmentUpdateDto
+            {
+                HospitalId = appointment.HospitalId,
+                DoctorId = dto.DoctorId,
+                PatientId = dto.PatientId,
+                CustomerId = dto.CustomerId,
+                AppointmentDate = dto.AppointmentDate,
+                AppointmentTime = dto.AppointmentTime,
+                DurationMinutes = dto.DurationMinutes,
+                Status = appointment.Status
+            };
+
+            return await ValidateUpdateAsync(
+                appointmentId,
+                updateDto);
+        }
+
         private async Task ValidateCommonAsync(
             int hospitalId,
             Guid doctorId,
