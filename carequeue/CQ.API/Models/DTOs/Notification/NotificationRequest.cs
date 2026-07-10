@@ -7,7 +7,7 @@ public class NotificationRequest
     public Guid PatientId { get; set; }
     public int? AppointmentId { get; set; }
 
-    public int TemplateId { get; set; }
+    public NotificationTemplateType TemplateType { get; set; }
 
     public NotificationChannel Channel { get; set; } = NotificationChannel.Email;
 

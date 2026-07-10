@@ -22,7 +22,7 @@ namespace carequeue.CQ.API.Models.Entities
         public string Subject { get; set; } = string.Empty;
 
         [Required]
-        public string Body { get; set; } = string.Empty; // Left unbounded for nvarchar(max) templates
+        public string Body { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;
     }
