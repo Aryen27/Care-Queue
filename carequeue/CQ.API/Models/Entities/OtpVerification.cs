@@ -30,6 +30,8 @@ namespace carequeue.CQ.API.Models.Entities
 
         public DateTime? UsedAt { get; set; }
 
+        public DateTime? RevokedAt { get; set; }
+
         public int Attempts { get; set; }
 
         public DateTime CreatedAt { get; set; }

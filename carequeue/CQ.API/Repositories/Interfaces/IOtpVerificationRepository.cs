@@ -33,5 +33,9 @@ namespace carequeue.CQ.API.Repositories.Interfaces
         Task<IEnumerable<OtpVerification>> GetExpiredOtpsAsync();
 
         Task<IEnumerable<OtpVerification>> GetUnusedOtpsAsync();
+
+        Task<OtpVerification?> GetLatestActiveOtpAsync( int customerId, OtpPurpose purpose);
+
+        Task<IEnumerable<OtpVerification>> GetActiveOtpsAsync( int customerId, OtpPurpose purpose);
     }
 }

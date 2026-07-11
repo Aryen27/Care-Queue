@@ -65,7 +65,7 @@ namespace carequeue.CQ.API.Repositories
         public async Task<IEnumerable<OtpVerification>> GetUnusedOtpsAsync()
         {
             return await _context.OtpVerifications
-                .Where(o => o.UsedAt == null)
+                .Where(o => o.UsedAt == null && o.RevokedAt == null)
                 .ToListAsync();
         }
 
@@ -90,6 +90,35 @@ namespace carequeue.CQ.API.Repositories
         {
             _context.OtpVerifications.Remove(otpVerification);
             return Task.CompletedTask;
+        }
+
+        public async Task<OtpVerification?> GetLatestActiveOtpAsync(
+            int customerId,
+            OtpPurpose purpose)
+        {
+            return await _context.OtpVerifications
+                .Where(o =>
+                    o.CustomerId == customerId &&
+                    o.Purpose == purpose &&
+                    o.UsedAt == null &&
+                    o.RevokedAt == null &&
+                    o.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<OtpVerification>> GetActiveOtpsAsync(
+            int customerId,
+            OtpPurpose purpose)
+        {
+            return await _context.OtpVerifications
+                .Where(o =>
+                    o.CustomerId == customerId &&
+                    o.Purpose == purpose &&
+                    o.UsedAt == null &&
+                    o.RevokedAt == null &&
+                    o.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
         }
 
         public async Task SaveChangesAsync()
