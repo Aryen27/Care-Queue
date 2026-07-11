@@ -1,5 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using carequeue.CQ.API.Configurations;
 using carequeue.CQ.API.Data;
+using carequeue.CQ.API.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,17 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<SmtpSettings>(
+    builder.Configuration.GetSection(SmtpSettings.SectionName));
+
+builder.Services.AddScoped<MailKitEmailProvider>();
+
+builder.Services.AddScoped<EmailLogRepository>();
+
+//builder.Services.AddScoped<EmailService>();
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 var app = builder.Build();
 
