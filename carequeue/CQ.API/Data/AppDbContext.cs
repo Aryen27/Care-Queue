@@ -34,9 +34,9 @@ namespace carequeue.CQ.API.Data
             modelBuilder.Entity<Customer>().HasQueryFilter(c => c.IsActive);
 
             // II. Propagate the filter to dependent entities to fix the warnings
-            modelBuilder.Entity<Appointment>().HasQueryFilter(a => a.Customer.IsActive);
-            modelBuilder.Entity<OtpVerification>().HasQueryFilter(o => o.Customer.IsActive);
-            modelBuilder.Entity<Notification>().HasQueryFilter(n => n.Customer.IsActive);
+            modelBuilder.Entity<Appointment>().HasQueryFilter(a => a.Customer!.IsActive);
+            modelBuilder.Entity<OtpVerification>().HasQueryFilter(o => o.Customer!.IsActive);
+            modelBuilder.Entity<Notification>().HasQueryFilter(n => n.Customer!.IsActive);
 
             // 1. Hospital Defaults
             modelBuilder.Entity<Hospital>(entity =>

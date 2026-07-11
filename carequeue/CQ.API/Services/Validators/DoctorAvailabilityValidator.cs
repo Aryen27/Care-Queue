@@ -50,10 +50,10 @@ namespace carequeue.CQ.API.Services.Validators
 
             if (errors.Any())
             {
-                return Task.FromResult(ServiceResult.Validation(errors));
+                return ServiceResult.Validation(errors);
             }
 
-            return Task.FromResult(ServiceResult.Ok());
+            return ServiceResult.Ok();
         }
 
         public ServiceResult ValidateDoctorAvailability(

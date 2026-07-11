@@ -31,7 +31,7 @@ namespace carequeue.CQ.API.Models.Entities
         [Required]
         [StringLength(150)]
         [EmailAddress]
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
         [Required]
         [StringLength(20)]

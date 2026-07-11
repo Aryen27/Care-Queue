@@ -11,5 +11,5 @@ public class NotificationRequest
 
     public NotificationChannel Channel { get; set; } = NotificationChannel.Email;
 
-    public Dictionary<string, string> TemplateValues { get; set; }
+    public required Dictionary<string, string> TemplateValues { get; set; }
 }

@@ -21,5 +21,8 @@
         public int DurationMinutes { get; set; }
 
         public int SlotDurationMinutes { get; set; }
+
+        // Add this missing property:
+        public List<TimeSpan> AvailableSlots { get; set; } = new();
     }
 }

@@ -22,7 +22,7 @@ namespace carequeue.CQ.API.DTOs.DoctorDTO
         [Required]
         [EmailAddress]
         [StringLength(150)]
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
         [Required]
         [Phone]

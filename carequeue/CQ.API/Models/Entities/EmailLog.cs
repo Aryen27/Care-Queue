@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using carequeue.CQ.API.Models.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace carequeue.CQ.API.Models.Entities
@@ -29,8 +30,7 @@ namespace carequeue.CQ.API.Models.Entities
         public string Provider { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(30)]
-        public string Status { get; set; } = string.Empty;
+        public EmailStatus Status { get; set; }
 
         public DateTime SentAt { get; set; }
 

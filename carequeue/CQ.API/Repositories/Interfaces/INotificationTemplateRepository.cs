@@ -9,6 +9,8 @@ namespace carequeue.CQ.API.Repositories.Interfaces
 
         Task<NotificationTemplate?> GetByTypeAsync(string type);
 
+        Task<NotificationTemplate?> GetByIdAsync(int templateId);
+
         Task AddAsync(NotificationTemplate template);
 
         Task UpdateAsync(NotificationTemplate template);

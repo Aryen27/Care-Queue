@@ -5,11 +5,11 @@ namespace carequeue.CQ.API.DTOs.DoctorDTO
     public class DoctorUpdateDto
     {
         [Required]
-        public int HospitalId { get; set; }
+        public required int HospitalId { get; set; }
 
         [Required]
         [StringLength(150)]
-        public string Name { get; set; } = string.Empty;
+        public required string Name { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100)]
@@ -22,7 +22,7 @@ namespace carequeue.CQ.API.DTOs.DoctorDTO
         [Required]
         [EmailAddress]
         [StringLength(150)]
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
         [Required]
         [Phone]

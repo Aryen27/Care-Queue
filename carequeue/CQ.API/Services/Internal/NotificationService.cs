@@ -24,13 +24,14 @@ namespace carequeue.CQ.API.Services.Internal
         public async Task<ServiceResult<Notification>> CreateNotificationAsync(
             NotificationRequest request)
         {
-            var template = await _templateRepository.GetByIdAsync(request.TemplateId);
+            // Get template by Type (converted to string to use your single-item repository method)
+            var template = await _templateRepository.GetByTypeAsync(request.TemplateType.ToString());
 
             if (template == null)
             {
                 return ServiceResult<Notification>.Fail(
                     ErrorCodes.NotFound,
-                    "Notification template not found.");
+                    $"Notification template for type '{request.TemplateType}' not found.");
             }
 
             var customer = await _customerRepository.GetByIdAsync(request.CustomerId);
@@ -49,6 +50,7 @@ namespace carequeue.CQ.API.Services.Internal
                 PatientId = request.PatientId,
                 AppointmentId = request.AppointmentId,
 
+                // We get the TemplateId from the fetched template object
                 TemplateId = template.TemplateId,
 
                 Channel = request.Channel,
@@ -73,6 +75,8 @@ namespace carequeue.CQ.API.Services.Internal
 
             return ServiceResult<Notification>.Ok(notification);
         }
+
+        // ... Keep GetPendingNotificationsAsync, MarkAsSentAsync, MarkAsFailedAsync, and ReplaceTemplateValues exactly as they were
 
         public async Task<ServiceResult<IEnumerable<Notification>>> GetPendingNotificationsAsync()
         {

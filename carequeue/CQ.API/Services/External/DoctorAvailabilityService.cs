@@ -145,7 +145,7 @@ namespace carequeue.CQ.API.Services.External
                 var slots = GetAvailableSlots(
                     schedule,
                     appointments,
-                    request.DurationMinutes);
+                    request.DurationMinutes).ToList();
 
                 if (!slots.Any())
                     continue;
@@ -170,7 +170,7 @@ namespace carequeue.CQ.API.Services.External
                 DoctorName = doctor.Name,
                 Specialization = doctor.Specialization,
                 ConsultationFee = doctor.ConsultationFee,
-                AvailableSlots = availableSlots
+                AvailableSlots = availableSlots.ToList()
             };
         }
     }
