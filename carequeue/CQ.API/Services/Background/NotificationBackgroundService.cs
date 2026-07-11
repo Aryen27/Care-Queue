@@ -1,4 +1,6 @@
-﻿using carequeue.CQ.API.Repositories.Interfaces;
+﻿using carequeue.CQ.API.Models.Entities;
+using carequeue.CQ.API.Models.Enums;
+using carequeue.CQ.API.Repositories.Interfaces;
 using carequeue.CQ.API.Services.Internal;
 
 namespace carequeue.CQ.API.Services.Background
@@ -7,12 +9,55 @@ namespace carequeue.CQ.API.Services.Background
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<NotificationBackgroundService> _logger;
+        private const int MaxRetryAttempts = 5;
+        private static readonly TimeSpan PollingInterval = TimeSpan.FromSeconds(30);
         public NotificationBackgroundService(
                     IServiceProvider serviceProvider,
                     ILogger<NotificationBackgroundService> logger)
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
+        }
+
+        private static TimeSpan CalculateRetryDelay(
+            int retryCount)
+        {
+            var minutes =
+                Math.Min(
+                    Math.Pow(2, retryCount - 1),
+                    60);
+
+            return TimeSpan.FromMinutes(minutes);
+        }
+
+        private async Task HandleRetryAsync(Notification notification, INotificationRepository repository)
+        {
+            notification.RetryCount++;
+
+            if (notification.RetryCount >= MaxRetryAttempts)
+            {
+                notification.Status = NotificationStatus.Failed;
+                notification.NextRetryAt = null;
+
+                _logger.LogError(
+                    "Notification {NotificationId} permanently failed after {RetryCount} attempts.",
+                    notification.NotificationId,
+                    notification.RetryCount);
+            }
+            else
+            {
+                notification.NextRetryAt = DateTime.UtcNow.Add(CalculateRetryDelay(notification.RetryCount));
+
+                _logger.LogWarning(
+                    "Notification {NotificationId} failed. Scheduled for retry at {NextRetryAt}. Attempt {RetryCount}/{MaxRetries}",
+                    notification.NotificationId,
+                    notification.NextRetryAt,
+                    notification.RetryCount,
+                    MaxRetryAttempts);
+            }
+
+            await repository.UpdateAsync(notification);
+            await repository.SaveChangesAsync();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -49,8 +94,7 @@ namespace carequeue.CQ.API.Services.Background
                             }
                             else
                             {
-                                _logger.LogWarning("Notification {NotificationId} failed to send. Reason: {Error}",
-                                    notification.NotificationId, result.Error?.Message);
+                                await HandleRetryAsync(notification);
                             }
                         }
                         catch (Exception ex)

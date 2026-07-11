@@ -41,7 +41,6 @@ namespace carequeue.CQ.API.Services.Internal
         {
             notification.Status = NotificationStatus.Failed;
             notification.FailureReason = reason;
-            notification.RetryCount++;
             notification.UpdatedAt = DateTime.UtcNow;
 
             await _notificationRepository.UpdateAsync(notification);

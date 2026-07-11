@@ -82,9 +82,13 @@ namespace carequeue.CQ.API.Repositories
         public async Task<IEnumerable<Notification>> GetPendingNotificationsAsync()
         {
             return await _context.Notifications
-                .Where(n => n.Status == NotificationStatus.Pending)
-                .OrderBy(n => n.CreatedAt)
-                .ToListAsync();
+                .Where(n =>
+                n.Status == NotificationStatus.Pending &&
+                (
+                    n.NextRetryAt == null ||
+                    n.NextRetryAt <= DateTime.UtcNow
+                ))
+                .OrderBy(n => n.CreatedAt).ToListAsync();
         }
 
         public async Task<bool> ExistsAsync(int notificationId)
