@@ -95,61 +95,13 @@ namespace carequeue.CQ.API.Services.Internal
             return ServiceResult<IEnumerable<Notification>>.Ok(notifications);
         }
 
-        public async Task<ServiceResult> MarkAsSentAsync(int notificationId)
-        {
-            var notification =
-                await _notificationRepository.GetByIdAsync(notificationId);
-
-            if (notification == null)
-            {
-                return ServiceResult.Fail(
-                    ErrorCodes.NotFound,
-                    "Notification not found.");
-            }
-
-            notification.Status = NotificationStatus.Sent;
-            notification.SentAt = DateTime.UtcNow;
-            notification.UpdatedAt = DateTime.UtcNow;
-            notification.FailureReason = null;
-
-            await _notificationRepository.UpdateAsync(notification);
-            await _notificationRepository.SaveChangesAsync();
-
-            return ServiceResult.Ok();
-        }
-
-        public async Task<ServiceResult> MarkAsFailedAsync(
-            int notificationId,
-            string failureReason)
-        {
-            var notification =
-                await _notificationRepository.GetByIdAsync(notificationId);
-
-            if (notification == null)
-            {
-                return ServiceResult.Fail(
-                    ErrorCodes.NotFound,
-                    "Notification not found.");
-            }
-
-            notification.Status = NotificationStatus.Failed;
-            notification.FailureReason = failureReason;
-            notification.RetryCount++;
-            notification.UpdatedAt = DateTime.UtcNow;
-
-            await _notificationRepository.UpdateAsync(notification);
-            await _notificationRepository.SaveChangesAsync();
-
-            return ServiceResult.Ok();
-        }
-
         private static string ReplaceTemplateValues(
             string template,
             Dictionary<string, string> values)
         {
-            if (string.IsNullOrWhiteSpace(template))
+            if (string.IsNullOrWhiteSpace(template) || values == null || values.Count == 0)
             {
-                return string.Empty;
+                return template ?? string.Empty;
             }
 
             foreach (var value in values)

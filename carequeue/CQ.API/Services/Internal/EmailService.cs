@@ -11,16 +11,41 @@ namespace carequeue.CQ.API.Services.Internal
     {
         private readonly MailKitEmailProvider _provider;
         private readonly EmailLogRepository _emailLogRepository;
-        private readonly NotificationService _notificationService;
+        private readonly INotificationRepository _notificationRepository;
 
         public EmailService(
             MailKitEmailProvider provider,
             EmailLogRepository emailLogRepository,
-            NotificationService notificationService)
+            INotificationRepository notificationRepository)
         {
             _provider = provider;
             _emailLogRepository = emailLogRepository;
-            _notificationService = notificationService;
+            _notificationRepository = notificationRepository;
+        }
+
+        private async Task MarkNotificationSentAsync(
+    Notification notification)
+        {
+            notification.Status = NotificationStatus.Sent;
+            notification.SentAt = DateTime.UtcNow;
+            notification.UpdatedAt = DateTime.UtcNow;
+            notification.FailureReason = null;
+
+            await _notificationRepository.UpdateAsync(notification);
+            await _notificationRepository.SaveChangesAsync();
+        }
+
+        private async Task MarkNotificationFailedAsync(
+            Notification notification,
+            string reason)
+        {
+            notification.Status = NotificationStatus.Failed;
+            notification.FailureReason = reason;
+            notification.RetryCount++;
+            notification.UpdatedAt = DateTime.UtcNow;
+
+            await _notificationRepository.UpdateAsync(notification);
+            await _notificationRepository.SaveChangesAsync();
         }
 
         public async Task<ServiceResult> SendNotificationAsync(
@@ -29,13 +54,9 @@ namespace carequeue.CQ.API.Services.Internal
             var emailLog = new EmailLog
             {
                 NotificationId = notification.NotificationId,
-
                 Recipient = notification.Recipient,
-
                 Subject = notification.Subject ?? string.Empty,
-
                 Provider = "MailKit SMTP",
-
                 Status = EmailStatus.Pending
             };
 
@@ -48,33 +69,18 @@ namespace carequeue.CQ.API.Services.Internal
                     new EmailMessage
                     {
                         Recipient = notification.Recipient,
-
                         Subject = notification.Subject ?? string.Empty,
-
                         Body = notification.Message,
-
                         IsHtml = true
                     });
 
                 emailLog.Status = EmailStatus.Sent;
                 emailLog.SentAt = DateTime.UtcNow;
 
-                notification.Status = NotificationStatus.Sent;
-                notification.SentAt = DateTime.UtcNow;
-                notification.UpdatedAt = DateTime.UtcNow;
-                notification.FailureReason = null;
-
                 await _emailLogRepository.UpdateAsync(emailLog);
                 await _emailLogRepository.SaveChangesAsync();
 
-                emailLog.Status = EmailStatus.Sent;
-                emailLog.SentAt = DateTime.UtcNow;
-
-                await _emailLogRepository.UpdateAsync(emailLog);
-                await _emailLogRepository.SaveChangesAsync();
-
-                await _notificationService.MarkAsSentAsync(
-                    notification.NotificationId);
+                await MarkNotificationSentAsync(notification);
 
                 return ServiceResult.Ok();
             }
@@ -83,22 +89,11 @@ namespace carequeue.CQ.API.Services.Internal
                 emailLog.Status = EmailStatus.Failed;
                 emailLog.FailureReason = ex.Message;
 
-                notification.Status = NotificationStatus.Failed;
-                notification.FailureReason = ex.Message;
-                notification.RetryCount++;
-                notification.UpdatedAt = DateTime.UtcNow;
-
                 await _emailLogRepository.UpdateAsync(emailLog);
                 await _emailLogRepository.SaveChangesAsync();
 
-                emailLog.Status = EmailStatus.Failed;
-                emailLog.FailureReason = ex.Message;
-
-                await _emailLogRepository.UpdateAsync(emailLog);
-                await _emailLogRepository.SaveChangesAsync();
-
-                await _notificationService.MarkAsFailedAsync(
-                    notification.NotificationId,
+                await MarkNotificationFailedAsync(
+                    notification,
                     ex.Message);
 
                 return ServiceResult.Fail(
