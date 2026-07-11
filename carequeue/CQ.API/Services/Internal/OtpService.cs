@@ -137,8 +137,8 @@ namespace carequeue.CQ.API.Services.Internal
                     await transaction.RollbackAsync();
 
                     return ServiceResult<string>.Fail(
-                        notification.Error.Code,
-                        notification.Error.Message!);
+                        notification.Error!.Code,
+                        notification.Error!.Message!);
                 }
 
                 // Revoke previous active OTPs only after the new OTP has been successfully emailed.
