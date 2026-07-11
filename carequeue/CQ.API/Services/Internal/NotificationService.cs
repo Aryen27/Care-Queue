@@ -10,18 +10,15 @@ namespace carequeue.CQ.API.Services.Internal
         private readonly INotificationRepository _notificationRepository;
         private readonly INotificationTemplateRepository _templateRepository;
         private readonly ICustomerRepository _customerRepository;
-        private readonly EmailService _emailService;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             INotificationTemplateRepository templateRepository,
-            ICustomerRepository customerRepository,
-            EmailService emailService)
+            ICustomerRepository customerRepository)
         {
             _notificationRepository = notificationRepository;
             _templateRepository = templateRepository;
             _customerRepository = customerRepository;
-            _emailService = emailService;
         }
 
         public async Task<ServiceResult<Notification>> CreateNotificationAsync(
@@ -74,16 +71,8 @@ namespace carequeue.CQ.API.Services.Internal
             await _notificationRepository.AddAsync(notification);
             await _notificationRepository.SaveChangesAsync();
 
-            var emailResult =
-                await _emailService.SendNotificationAsync(notification);
-
-            if (!emailResult.Success)
-            {
-                return ServiceResult<Notification>.Fail(
-                    emailResult.Error.Code,
-                    emailResult.Error.Message!);
-            }
-
+            // HTTP Request ends here! 
+            // The NotificationBackgroundService will pick this up and handle the SMTP transfer.
             return ServiceResult<Notification>.Ok(notification);
         }
 

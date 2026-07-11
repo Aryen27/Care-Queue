@@ -141,8 +141,7 @@ namespace carequeue.CQ.API.Services.Internal
                         notification.Error.Message!);
                 }
 
-                // Revoke previous active OTPs only after
-                // the new OTP has been successfully emailed.
+                // Revoke previous active OTPs only after the new OTP has been successfully emailed.
                 var activeOtps =
                     await _otpRepository
                         .GetActiveOtpsAsync(

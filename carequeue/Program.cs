@@ -1,6 +1,8 @@
 using carequeue.CQ.API.Configurations;
 using carequeue.CQ.API.Data;
 using carequeue.CQ.API.Repositories;
+using carequeue.CQ.API.Services.Background;
+using carequeue.CQ.API.Services.Internal;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,9 +25,10 @@ builder.Services.AddScoped<MailKitEmailProvider>();
 
 builder.Services.AddScoped<EmailLogRepository>();
 
-//builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<NotificationService>();
 
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddHostedService<NotificationBackgroundService>();
 
 var app = builder.Build();
 
