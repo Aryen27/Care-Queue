@@ -10,15 +10,23 @@ namespace carequeue.CQ.API.Services.Internal
     public class OtpService
     {
         private readonly IOtpVerificationRepository _otpRepository;
+        private readonly NotificationService _notificationService;
+        private readonly ICustomerRepository _customerRepository;
+
         private const int MaxFailedAttempts = 3;
         private const int ExpirationMinutes = 10;
 
-        public OtpService(IOtpVerificationRepository otpRepository)
+        public OtpService(
+            IOtpVerificationRepository otpRepository,
+            NotificationService notificationService,
+            ICustomerRepository customerRepository)
         {
             _otpRepository = otpRepository;
+            _notificationService = notificationService;
+            _customerRepository = customerRepository;
         }
 
-        public async Task<ServiceResult<string>> GenerateAndSendOtpAsync(int customerId, OtpPurpose purpose, string recipientEmail)
+        public async Task<ServiceResult<string>> GenerateAndSendOtpAsync(int customerId, OtpPurpose purpose)
         {
             // 1. Generating a secure 6-digit num string
             string rawCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
@@ -40,7 +48,56 @@ namespace carequeue.CQ.API.Services.Internal
             await _otpRepository.AddAsync(otpVerification);
             await _otpRepository.SaveChangesAsync();
 
-            // Returning the raw plaintext code back
+            var customer =
+                await _customerRepository.GetByIdAsync(customerId);
+
+            if (customer == null)
+            {
+                return ServiceResult<string>.Fail(
+                    ErrorCodes.NotFound,
+                    "Customer not found.");
+            }
+
+            var notification = await _notificationService.CreateNotificationAsync(
+                new NotificationRequest
+                {
+                    HospitalId = 0,
+
+                    CustomerId = customerId,
+
+                    PatientId = Guid.Empty,
+
+                    TemplateType = purpose switch
+                    {
+                        OtpPurpose.EmailVerification =>
+                            NotificationTemplateType.EmailVerification,
+
+                        OtpPurpose.PasswordReset =>
+                            NotificationTemplateType.PasswordReset,
+
+                        OtpPurpose.Login =>
+                            NotificationTemplateType.Login,
+
+                        OtpPurpose.Payment =>
+                            NotificationTemplateType.Payment,
+
+                        _  => throw new InvalidOperationException()
+                    },
+
+                    TemplateValues = new()
+                    {
+                        ["OTP"] = rawCode,
+                        ["ExpiryMinutes"] = ExpirationMinutes.ToString()
+                    }
+                });
+
+            if (!notification.Success)
+            {
+                return ServiceResult<string>.Fail(
+                    notification.Error.Code,
+                    notification.Error.Message!);
+            }
+
             return ServiceResult<string>.Ok(rawCode);
         }
 

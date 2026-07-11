@@ -10,21 +10,23 @@ namespace carequeue.CQ.API.Services.Internal
         private readonly INotificationRepository _notificationRepository;
         private readonly INotificationTemplateRepository _templateRepository;
         private readonly ICustomerRepository _customerRepository;
+        private readonly EmailService _emailService;
 
         public NotificationService(
             INotificationRepository notificationRepository,
             INotificationTemplateRepository templateRepository,
-            ICustomerRepository customerRepository)
+            ICustomerRepository customerRepository,
+            EmailService emailService)
         {
             _notificationRepository = notificationRepository;
             _templateRepository = templateRepository;
             _customerRepository = customerRepository;
+            _emailService = emailService;
         }
 
         public async Task<ServiceResult<Notification>> CreateNotificationAsync(
             NotificationRequest request)
         {
-            // Get template by Type (converted to string to use your single-item repository method)
             var template = await _templateRepository.GetByTypeAsync(request.TemplateType.ToString());
 
             if (template == null)
@@ -50,7 +52,6 @@ namespace carequeue.CQ.API.Services.Internal
                 PatientId = request.PatientId,
                 AppointmentId = request.AppointmentId,
 
-                // We get the TemplateId from the fetched template object
                 TemplateId = template.TemplateId,
 
                 Channel = request.Channel,
@@ -73,10 +74,18 @@ namespace carequeue.CQ.API.Services.Internal
             await _notificationRepository.AddAsync(notification);
             await _notificationRepository.SaveChangesAsync();
 
+            var emailResult =
+                await _emailService.SendNotificationAsync(notification);
+
+            if (!emailResult.Success)
+            {
+                return ServiceResult<Notification>.Fail(
+                    emailResult.Error.Code,
+                    emailResult.Error.Message!);
+            }
+
             return ServiceResult<Notification>.Ok(notification);
         }
-
-        // ... Keep GetPendingNotificationsAsync, MarkAsSentAsync, MarkAsFailedAsync, and ReplaceTemplateValues exactly as they were
 
         public async Task<ServiceResult<IEnumerable<Notification>>> GetPendingNotificationsAsync()
         {

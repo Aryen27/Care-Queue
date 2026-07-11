@@ -11,16 +11,16 @@ namespace carequeue.CQ.API.Services.Internal
     {
         private readonly MailKitEmailProvider _provider;
         private readonly EmailLogRepository _emailLogRepository;
-        private readonly INotificationRepository _notificationRepository;
+        private readonly NotificationService _notificationService;
 
         public EmailService(
             MailKitEmailProvider provider,
             EmailLogRepository emailLogRepository,
-            INotificationRepository notificationRepository)
+            NotificationService notificationService)
         {
             _provider = provider;
             _emailLogRepository = emailLogRepository;
-            _notificationRepository = notificationRepository;
+            _notificationService = notificationService;
         }
 
         public async Task<ServiceResult> SendNotificationAsync(
@@ -67,8 +67,14 @@ namespace carequeue.CQ.API.Services.Internal
                 await _emailLogRepository.UpdateAsync(emailLog);
                 await _emailLogRepository.SaveChangesAsync();
 
-                await _notificationRepository.UpdateAsync(notification);
-                await _notificationRepository.SaveChangesAsync();
+                emailLog.Status = EmailStatus.Sent;
+                emailLog.SentAt = DateTime.UtcNow;
+
+                await _emailLogRepository.UpdateAsync(emailLog);
+                await _emailLogRepository.SaveChangesAsync();
+
+                await _notificationService.MarkAsSentAsync(
+                    notification.NotificationId);
 
                 return ServiceResult.Ok();
             }
@@ -85,8 +91,15 @@ namespace carequeue.CQ.API.Services.Internal
                 await _emailLogRepository.UpdateAsync(emailLog);
                 await _emailLogRepository.SaveChangesAsync();
 
-                await _notificationRepository.UpdateAsync(notification);
-                await _notificationRepository.SaveChangesAsync();
+                emailLog.Status = EmailStatus.Failed;
+                emailLog.FailureReason = ex.Message;
+
+                await _emailLogRepository.UpdateAsync(emailLog);
+                await _emailLogRepository.SaveChangesAsync();
+
+                await _notificationService.MarkAsFailedAsync(
+                    notification.NotificationId,
+                    ex.Message);
 
                 return ServiceResult.Fail(
                     ErrorCodes.ServerError,
