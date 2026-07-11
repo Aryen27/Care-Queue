@@ -1,4 +1,5 @@
 ﻿using carequeue.CQ.API.DTOs.AppointmentDTO;
+using carequeue.CQ.API.Models.DTOs.EventDTO;
 using carequeue.CQ.API.Models.Entities;
 
 namespace carequeue.CQ.API.Mappers
@@ -99,6 +100,23 @@ namespace carequeue.CQ.API.Mappers
             appointment.Status = dto.Status;
 
             appointment.UpdatedAt = DateTime.UtcNow;
+        }
+
+        public static AppointmentEventDto ToEventDto(this Appointment appointment)
+        {
+            return new AppointmentEventDto(
+                appointment.AppointmentId,
+                appointment.HospitalId,
+                appointment.CustomerId,
+                appointment.PatientId,
+                appointment.DoctorId,
+                appointment.Customer?.Name ?? string.Empty,
+                appointment.Patient?.Name ?? string.Empty,
+                appointment.Doctor?.Name ?? string.Empty,
+                appointment.Hospital?.HospitalName ?? string.Empty,
+                appointment.AppointmentDate,
+                appointment.AppointmentTime
+            );
         }
     }
 }

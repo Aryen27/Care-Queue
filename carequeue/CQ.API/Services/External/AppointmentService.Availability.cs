@@ -38,7 +38,6 @@ namespace carequeue.CQ.API.Services.External
 
             var doctorIds = doctors.Select(d => d.DoctorId).ToList();
 
-            // 1. Fetching data in bulk from repositories
             var schedulesList = await _doctorScheduleRepository
                 .GetSchedulesByDoctorsAndDayBulkAsync(
                     doctorIds,
@@ -49,7 +48,6 @@ namespace carequeue.CQ.API.Services.External
                     doctorIds,
                     request.AppointmentDate);
 
-            // 2. Optimization: Convert bulk results to lookups for O(1) inside the loop
             var schedulesLookup = schedulesList.ToDictionary(s => s.DoctorId);
             var appointmentsLookup = appointmentsList.ToLookup(a => a.DoctorId);
 
@@ -57,12 +55,10 @@ namespace carequeue.CQ.API.Services.External
 
             foreach (var doctor in doctors)
             {
-                // O(1) dictionary lookup instead of FirstOrDefault()
                 schedulesLookup.TryGetValue(doctor.DoctorId, out var schedule);
 
                 if (schedule == null) continue;
 
-                // O(1) lookup instead of Where()
                 var doctorAppointments = appointmentsLookup[doctor.DoctorId];
 
                 var availability = _availabilityValidator.ValidateAvailability(

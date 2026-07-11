@@ -1,10 +1,10 @@
-﻿using carequeue.CQ.API.Models.Entities;
+﻿using carequeue.CQ.API.Models.DTOs.EventDTO;
 
 namespace carequeue.CQ.API.Services.Events.Interfaces
 {
     public interface IAppointmentEvent
     {
-        Appointment Appointment { get; }
+        AppointmentEventDto Appointment { get; }
 
         DateTime OccurredAt { get; }
     }

@@ -42,8 +42,13 @@ namespace carequeue.CQ.API.Services.External
             appointment = await _appointmentRepository.GetByIdAsync(
                 appointment.AppointmentId);
 
+            if (appointment == null)
+            {
+                throw new Exception("Appointment not found.");
+            }
+
             await _eventDispatcher.DispatchAsync(
-                new AppointmentBookedEvent(appointment!));
+                new AppointmentBookedEvent(appointment.ToEventDto()));
 
             return ServiceResult<AppointmentReadDto>.Ok(
                 appointment!.ToReadDto());
@@ -114,8 +119,13 @@ namespace carequeue.CQ.API.Services.External
             appointment = await _appointmentRepository.GetByIdAsync(
                 appointment.AppointmentId);
 
+            if (appointment == null)
+            {
+                throw new Exception("Appointment not found.");
+            }
+
             await _eventDispatcher.DispatchAsync(
-                new AppointmentRescheduledEvent(appointment!));
+                new AppointmentRescheduledEvent(appointment.ToEventDto()));
 
             return ServiceResult<AppointmentReadDto>.Ok(
                 appointment!.ToReadDto());
@@ -151,7 +161,7 @@ namespace carequeue.CQ.API.Services.External
             await _appointmentRepository.SaveChangesAsync();
 
             await _eventDispatcher.DispatchAsync(
-                new AppointmentCancelledEvent(appointment));
+                new AppointmentCancelledEvent(appointment.ToEventDto()));
 
             return ServiceResult.Ok();
         }

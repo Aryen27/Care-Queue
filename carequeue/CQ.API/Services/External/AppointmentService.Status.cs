@@ -1,4 +1,5 @@
-﻿using carequeue.CQ.API.Models.DTOs.Common;
+﻿using carequeue.CQ.API.Mappers;
+using carequeue.CQ.API.Models.DTOs.Common;
 using carequeue.CQ.API.Models.Enums;
 using carequeue.CQ.API.Services.Events.Events;
 
@@ -35,7 +36,7 @@ namespace carequeue.CQ.API.Services.External
             await _appointmentRepository.SaveChangesAsync();
 
             await _eventDispatcher.DispatchAsync(
-                new AppointmentCompletedEvent(appointment));
+                new AppointmentCompletedEvent(appointment.ToEventDto()));
 
             return ServiceResult.Ok();
         }
@@ -69,7 +70,7 @@ namespace carequeue.CQ.API.Services.External
             await _appointmentRepository.SaveChangesAsync();
 
             await _eventDispatcher.DispatchAsync(
-                new AppointmentNoShowEvent(appointment));
+                new AppointmentNoShowEvent(appointment.ToEventDto()));
 
             return ServiceResult.Ok();
         }
