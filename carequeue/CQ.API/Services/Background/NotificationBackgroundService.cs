@@ -94,7 +94,7 @@ namespace carequeue.CQ.API.Services.Background
                             }
                             else
                             {
-                                await HandleRetryAsync(notification);
+                                await HandleRetryAsync(notification, notificationRepository);
                             }
                         }
                         catch (Exception ex)

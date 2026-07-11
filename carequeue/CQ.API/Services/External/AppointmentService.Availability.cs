@@ -21,61 +21,58 @@ namespace carequeue.CQ.API.Services.External
             return ServiceResult<bool>.Ok(availability.Success);
         }
 
-        public async Task<ServiceResult<IEnumerable<DoctorAvailabilityDto>>>
-            GetAvailableDoctorsAsync(
-                DoctorAvailabilityRequestDto request)
+        public async Task<ServiceResult<IEnumerable<DoctorAvailabilityDto>>> GetAvailableDoctorsAsync(
+            DoctorAvailabilityRequestDto request)
         {
-            var doctors =
-                (await _doctorRepository
-                    .GetDoctorsByHospitalAndSpecializationAsync(
-                        request.HospitalId,
-                        request.Specialization))
+            var doctors = (await _doctorRepository
+                .GetDoctorsByHospitalAndSpecializationAsync(
+                    request.HospitalId,
+                    request.Specialization))
                 .Where(d => d.IsActive && d.IsAvailable)
                 .ToList();
 
             if (!doctors.Any())
             {
-                return ServiceResult<IEnumerable<DoctorAvailabilityDto>>
-                    .Ok([]);
+                return ServiceResult<IEnumerable<DoctorAvailabilityDto>>.Ok([]);
             }
 
-            var doctorIds =
-                doctors.Select(d => d.DoctorId);
+            var doctorIds = doctors.Select(d => d.DoctorId).ToList();
 
-            var schedules =
-                await _doctorScheduleRepository
-                    .GetSchedulesByDoctorsAndDayBulkAsync(
-                        doctorIds,
-                        request.AppointmentDate.DayOfWeek);
+            // 1. Fetching data in bulk from repositories
+            var schedulesList = await _doctorScheduleRepository
+                .GetSchedulesByDoctorsAndDayBulkAsync(
+                    doctorIds,
+                    request.AppointmentDate.DayOfWeek);
 
-            var appointments =
-                await _appointmentRepository
-                    .GetDoctorAppointmentsByDateBulkAsync(
-                        doctorIds,
-                        request.AppointmentDate);
+            var appointmentsList = await _appointmentRepository
+                .GetDoctorAppointmentsByDateBulkAsync(
+                    doctorIds,
+                    request.AppointmentDate);
 
-            var availableDoctors =
-                new List<DoctorAvailabilityDto>();
+            // 2. Optimization: Convert bulk results to lookups for O(1) inside the loop
+            var schedulesLookup = schedulesList.ToDictionary(s => s.DoctorId);
+            var appointmentsLookup = appointmentsList.ToLookup(a => a.DoctorId);
+
+            var availableDoctors = new List<DoctorAvailabilityDto>();
 
             foreach (var doctor in doctors)
             {
-                var schedule =
-                    schedules.FirstOrDefault(s =>
-                        s.DoctorId == doctor.DoctorId);
+                // O(1) dictionary lookup instead of FirstOrDefault()
+                schedulesLookup.TryGetValue(doctor.DoctorId, out var schedule);
 
-                var doctorAppointments =
-                    appointments.Where(a =>
-                        a.DoctorId == doctor.DoctorId);
+                if (schedule == null) continue;
 
-                var availability =
-                    _availabilityValidator.ValidateAvailability(
-                        doctor,
-                        schedule,
-                        doctorAppointments,
-                        null,
-                        request.AppointmentDate,
-                        request.AppointmentTime,
-                        request.DurationMinutes);
+                // O(1) lookup instead of Where()
+                var doctorAppointments = appointmentsLookup[doctor.DoctorId];
+
+                var availability = _availabilityValidator.ValidateAvailability(
+                    doctor,
+                    schedule,
+                    doctorAppointments,
+                    null,
+                    request.AppointmentDate,
+                    request.AppointmentTime,
+                    request.DurationMinutes);
 
                 if (!availability.Success)
                 {
@@ -89,25 +86,16 @@ namespace carequeue.CQ.API.Services.External
                         DoctorName = doctor.Name,
                         Specialization = doctor.Specialization,
                         ConsultationFee = doctor.ConsultationFee,
-
                         IsAvailable = true,
-
                         AppointmentDate = request.AppointmentDate,
-
                         AppointmentTime = request.AppointmentTime,
-
-                        AppointmentEndTime =
-                            request.AppointmentTime.Add(
-                                TimeSpan.FromMinutes(request.DurationMinutes)),
-
+                        AppointmentEndTime = request.AppointmentTime.Add(TimeSpan.FromMinutes(request.DurationMinutes)),
                         DurationMinutes = request.DurationMinutes,
-
-                        SlotDurationMinutes = schedule!.SlotDurationMinutes
+                        SlotDurationMinutes = schedule.SlotDurationMinutes
                     });
             }
 
-            return ServiceResult<IEnumerable<DoctorAvailabilityDto>>
-                .Ok(availableDoctors);
+            return ServiceResult<IEnumerable<DoctorAvailabilityDto>>.Ok(availableDoctors);
         }
     }
 }
